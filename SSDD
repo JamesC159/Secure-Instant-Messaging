@@ -228,18 +228,18 @@ This subsection shall provide an overview of the organization of this
 SSDD.}
 
 {\selectlanguage{english}\color{black}
-Section 2 of this document describes the system and software constraints
-imposed by the operational environment, system requirements and user
-characteristics.}
+Section 2 of this document describes the system and software
+architecture from the developer and user viewpoint. \ }
 
 {\selectlanguage{english}\color{black}
-Section 3 of this document describes the system and software
-architecture fromthe developer{\textquoteright}s and the user{\textquoteright}s
-viewpoint.}
+Section 3 provides a detailed description of the threat model considered 
+in the security protocol design. \ }
 
 {\selectlanguage{english}\color{black}
-Section 4 provides detailed design descriptions for every component
-defined in the architectural view(s).}
+Section 4 provides a detailed description of the design of the software supported
+functionalities as well as the data structures required for implementation
+of supported functions that contribute to the implementation of the overall
+system and software architectural entities and components.  \ }
 
 \clearpage\setcounter{page}{1}\pagestyle{Convertvi}
 \section[SYSTEM AND SOFTWARE
@@ -251,109 +251,26 @@ design entity or component of the system as well as the relationship
 and interface between them. These architectural entities, when
 integrated together as specified within this document, shall implement
 all functions performed by the system in response to an input or in
-support of an output as described by the System and Software
-Requirements Specification (SSRS). All architectural entities or
-components shall: be uniquely identifiable, be well described,
+support of an output as described by the project requirements specification.
+All architectural entities or components shall: be uniquely identifiable, be well described,
 have clear responsibilities, have well specified interfaces, and have
-well described interactions with other architectural entities and any
-external systems. All necessary views at the architectural level 
-(or high-level design) shall be clearly described in this section. Each view shall include
-at least the following details: identification, configuration information, 
-and languages. \ }
+well described interactions with other architectural entities. \ }
 
-\subsection[DEVELOPER{\textquoteright}S ARCHITECTURAL
-VIEW]{\selectlanguage{english}\bfseries\color{black}
-DEVELOPER{\textquoteright}S ARCHITECTURAL VIEW}
-{\selectlanguage{english}\itshape\color{black}
-This subsection contains the descriptions of a system and all of its
-major components, using the methods, techniques, and languages from the
-developer{\textquoteright}s viewpoint. Each viewpoint description
-includes the viewpoint identification, description, and diagrammatic
-representation. }
-
-\subsection[USER{\textquoteright}S ARCHITECTURAL
-VIEW]{\selectlanguage{english}\bfseries\color{black}
-USER{\textquoteright}S ARCHITECTURAL VIEW}
-{\selectlanguage{english}\itshape\color{black}
-This subsection contains the descriptions of a system and all of its
-major components, using the methods, techniques, and languages from the
-user{\textquoteright}s viewpoint. \ Each viewpoint description includes
-the viewpoint identification, description, and diagrammatic
-representation. }
-
-\subsubsection{User{\textquoteright}s View Identification}
-{\selectlanguage{english}\itshape\color{black}
-Identify the view, state the purpose of the view, and identify major
-components or processes of the architecture.}
+\bigskip
 
 {\selectlanguage{english}\color{black}
 [Insert text here.]}
-
-\subsubsection{User{\textquoteright}s View Representation and
-Description }
-{\selectlanguage{english}\itshape\color{black}
-Provide a diagram and description of the user{\textquoteright}s view of
-the architecture.}
-
-{\selectlanguage{english}\color{black}
-[Insert diagram here.]}
-
-\subsection[Developer{\textquoteright}s View
-Identification]{\selectlanguage{english}\bfseries\color{black}
-Developer{\textquoteright}s View Identification}
-{\selectlanguage{english}\itshape\color{black}
-Identify the view, state the purpose of the view, and identify major
-components or processes of the architecture.}
-
-{\selectlanguage{english}\color{black}
-[Insert text here.]}
-
-\subsubsection[Developer{\textquoteright}s View Representation and
-Description ]{Developer{\textquoteright}s View Representation and
-Description }
-{\selectlanguage{english}\itshape\color{black}
-Provide a diagram and description of the developer{\textquoteright}s
-view of the architecture.}
-
-{\selectlanguage{english}\color{black}
-[Insert diagram here.]}
-
-\subsection[\ [ insert name of viewpoint {]} ARCHITECTURAL
-VIEW]{\foreignlanguage{english}{\ }\foreignlanguage{english}{[ insert
-name of viewpoint ] ARCHITECTURAL VIEW}}
-{\selectlanguage{english}\itshape\color{black}
-This subsection contains the descriptions of a system and all of its
-major components, using the methods, techniques, and languages from
-other than the developer{\textquoteright}s or user{\textquoteright}s
-viewpoint. \ Each viewpoint description includes the viewpoint
-identification, description, and diagrammatic representation. }
-
 
 \bigskip
 
 {\selectlanguage{english}\itshape\color{black}
-Repeat this subsection for each viewpoint identified.}
-
-\subsubsection{[ insert name of viewpoint ]{\textquoteright}s View
-Identification}
-{\selectlanguage{english}\itshape\color{black}
-Identify the view, state the purpose of the view, and identify major
-components or processes of the architecture.}
+Provide a diagram and description of the architecture.}
 
 {\selectlanguage{english}\color{black}
-[Insert text here.]}
-
-\subsubsection{[ insert name of viewpoint ]{\textquoteright}s View
-Representation and Description }
-{\selectlanguage{english}\itshape\color{black}
-Provide a diagram of the developer{\textquoteright}s view of the
-architecture.}
+[Insert diagram here.]}
 
 {\selectlanguage{english}\color{black}
-[Insert diagram and descriptions here.]}
-
-{\selectlanguage{english}\color{black}
-[Insert text or table here.]}
+[Insert diagram here.]}
 
 \clearpage\setcounter{page}{1}\pagestyle{Convertvi}
 \section{THREAT MODEL}
@@ -389,75 +306,25 @@ of interest to an attacker. Assets can be both physical and abstract. \ }
 {\selectlanguage{english}\itshape\color{black}
 This subsection of the document lists any attacks considered during the
 assessment and identification of potential threats and against the security
-protocols described in {\textquoteright}SECURITY FEATURES{\textquoteright}.
+protocols described in SECURITY FEATURES.
 \ }
 
 \subsection{SECURITY FEATURES}
 {\selectlanguage{english}\itshape\color{black}
- This subsection of the document lists and describes the provided security
- controls and policies to mitigate or prevent the threats and attacks identified in 
- {\textquoteright}THREAT IDENTIFICATION{\textquoteright} and 
- {\textquoteright}ATTACKS CONSIDERED {\textquoteright} \ }
+This subsection of the document lists and describes the provided security
+controls and policies to mitigate or prevent the threats and attacks identified in 
+THREAT IDENTIFICATION and ATTACKS CONSIDERED.
 
 \clearpage\setcounter{page}{1}\pagestyle{Convertvi}
 \section{SOFTWARE DETAILED DESIGN}
 {\selectlanguage{english}\itshape\color{black}
 This section of the document should describe with detail the design of
-the software being described in this document. \ The level of detail of
-the design entities and their relationship and interfaces shall be
-sufficient to enable software implementers to implement an integrate
-each of the described components in order to achieve full
-implementation of the software being described in this SSDD. This
-section shall specify for each design entity the following information:
-purpose, processing, data, interfaces, dependencies and relationships,
-concept of execution, needed resources, design rationale, information
-for reuse, types of errors, and error handling. \ }
-
-\bigskip
-
-{\selectlanguage{english}\itshape\color{black}
-The detailed design must correspond to an existing architectural view,
-normally the developer{\textquoteright}s view, but unusual
-circumstances may call for other detailed design viewpoints. \ If so,
-repeat this subsection as needed for those other viewpoints.}
-
-\subsection[\ DEVELOPER{\textquoteright}S VIEWPOINT DETAILED SOFTWARE
-DESIGN]{\foreignlanguage{english}{\ }\foreignlanguage{english}{DEVELOPER{\textquoteright}S
-VIEWPOINT DETAILED SOFTWARE DESIGN}}
-{\selectlanguage{english}\itshape\color{black}
-Identify the viewpoint and make reference to the diagram or model
-defining the view.}
-
-{\selectlanguage{english}\color{black}
-[Insert text, diagram or model here.]}
-
-\subsection[COMPONENT/ENTITY DETAILED
-DESIGN]{\selectlanguage{english}\bfseries\color{black} COMPONENT/ENTITY
-DETAILED DESIGN}
-\subsubsection{Detailed Design for Component/Entity: [ insert
-Component/Entity name here ]}
-\paragraph[\ Introduction/Purpose of this
-Component/Entity]{\ Introduction/Purpose of this Component/Entity}
-{\selectlanguage{english}\color{black}
-[ insert your text here ]}
-
-\paragraph[Input for this Component/Entity]{Input for this
-Component/Entity}
-{\selectlanguage{english}\color{black}
-[ insert your text here ]}
-
-\paragraph{Output for this Component/Entity}
-{\selectlanguage{english}\color{black}
-[ insert your text here ]}
-
-\paragraph{Component/Entity Process to Convert Input to Output}
-{\selectlanguage{english}\color{black}
-[ insert your text here ]}
-
-\paragraph{Design constraints and performance requirements of this
-Component/Entity}
-{\selectlanguage{english}\color{black}
-[ insert your text here ]}
+the software being described in this document. This
+section shall specify the following supported functions that correspond to the
+relevant architectural entity and components: logging into the system, establishing a session with other 
+another user, and how the security features mentioned in SECURITY FEATURES are implemented
+to provide authentication of users, message integrity, and message transfer
+confidentiality. \ }
 
 \subsection{DATA DICTIONARY}
 {\selectlanguage{english}\itshape\color{black}
