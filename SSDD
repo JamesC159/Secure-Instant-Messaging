@@ -363,18 +363,41 @@ and risks considered for the system described in this document. Security feature
 threat ranking, assets, attacks considered, countermeasures 
 and mitigation will be identified, quantified, and addressed in a complete 
 and detailed manner. \ }
-
-\subsection{SECURITY FEATURES}
-
+ 
 \subsection{THREAT IDENTIFICATION}
+{\selectlanguage{english}\itshape\color{black}
+This subsection of the document describes the threats
+considered and identified during the design of the system referenced
+ in this document. \ }
 
 \subsection{THREAT RANKING}
+{\selectlanguage{english}\itshape\color{black}
+This subsection of the document ranks the threats identified in the
+previous subsection from the perspective of risk factors. \ }
+
+\subsection{ENTRY POINTS}
+{\selectlanguage{english}\itshape\color{black}
+This subsection of the document defines the interfaces through which an attacker
+can interact with the system or supply it data. \ }
 
 \subsection{ASSETS}
+{\selectlanguage{english}\itshape\color{black}
+This subsection of the document identifies and lists the resources/items
+of interest to an attacker. Assets can be both physical and abstract. \ }
 
 \subsection{ATTACKS CONSIDERED}
+{\selectlanguage{english}\itshape\color{black}
+This subsection of the document lists any attacks considered during the
+assessment and identification of potential threats and against the security
+protocols described in {\textquoteright}SECURITY FEATURES{\textquoteright}.
+\ }
 
-\subsection{COUNTERMEASURES}
+\subsection{SECURITY FEATURES}
+{\selectlanguage{english}\itshape\color{black}
+ This subsection of the document lists and describes the provided security
+ controls and policies to mitigate or prevent the threats and attacks identified in 
+ {\textquoteright}THREAT IDENTIFICATION{\textquoteright} and 
+ {\textquoteright}ATTACKS CONSIDERED {\textquoteright} \ }
 
 \clearpage\setcounter{page}{1}\pagestyle{Convertvi}
 \section{SOFTWARE DETAILED DESIGN}
