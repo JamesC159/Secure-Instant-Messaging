@@ -355,6 +355,28 @@ architecture.}
 {\selectlanguage{english}\color{black}
 [Insert text or table here.]}
 
+\clearpage\setcounter{page}{1}\pagestyle{Convertvi}
+\section{THREAT MODEL}
+{\selectlanguage{english}\itshape\color{black} 
+This section of the document should describe with detail the potential threats
+and risks considered for the system described in this document. Security features,
+threat ranking, assets, attacks considered, countermeasures 
+and mitigation will be identified, quantified, and addressed in a complete 
+and detailed manner. \ }
+
+\subsection{SECURITY FEATURES}
+
+\subsection{THREAT IDENTIFICATION}
+
+\subsection{THREAT RANKING}
+
+\subsection{ASSETS}
+
+\subsection{ATTACKS CONSIDERED}
+
+\subsection{COUNTERMEASURES}
+
+\clearpage\setcounter{page}{1}\pagestyle{Convertvi}
 \section{SOFTWARE DETAILED DESIGN}
 {\selectlanguage{english}\itshape\color{black}
 This section of the document should describe with detail the design of
