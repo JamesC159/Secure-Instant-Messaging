@@ -256,7 +256,7 @@ All architectural entities or components shall: be uniquely identifiable, be wel
 have clear responsibilities, have well specified interfaces, and have
 well described interactions with other architectural entities. \ }
 
-\subsection{CLEINT}
+\subsection{CLIENT}
 {\selectlanguage{english}\itshape\color{black}
 This subsection of the document should describe in detail the component that represents
 a client in the system. A client consists of identification information such as IP address, port
