@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  23 OCT 2016 19:17
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  24 OCT 2016 14:21
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -494,25 +494,31 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
  been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.244 \clearpage
+l.243 \clearpage
                 \setcounter{page}{1}\pagestyle{Convertvi} [1
 
 ]pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
  been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.313 \clearpage
-                \setcounter{page}{1}\pagestyle{Convertvi} [1
+l.304 
+       [1
 
-]pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
+]pdfTeX warning (ext4): destination with the same identifier (name{page.2}) has
  been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.357 \clearpage
+l.318 \clearpage
+                \setcounter{page}{1}\pagestyle{Convertvi} [2]pdfTeX warning (ex
+t4): destination with the same identifier (name{page.1}) has been already used,
+ duplicate ignored
+<to be read again> 
+                   \relax 
+l.362 \clearpage
                 \setcounter{page}{1}\pagestyle{Convertvi} [1
 
 ]
-Overfull \hbox (8.674pt too wide) in paragraph at lines 378--441
+Overfull \hbox (8.674pt too wide) in paragraph at lines 383--446
 []  
  []
 
@@ -520,50 +526,43 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.448 \clearpage
+l.453 \clearpage
                 \setcounter{page}{1}\pagestyle{Convertviii} [1
 
 ]pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
  been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.461 \clearpage
+l.466 \clearpage
                 \setcounter{page}{1}\pagestyle{Convertix} [1
 
 ]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 473.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 478.
 pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.473 \end{document}
+l.478 \end{document}
                      [1
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 473.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 478.
  (./SSDD_Template_A2-4.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 473.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 473.
-
-
-Package rerunfilecheck Warning: File `SSDD_Template_A2-4.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `SSDD_Template_A2-4.out':
-(rerunfilecheck)             Before: D2AA6366EA21BABED93F609064D162AF;1179
-(rerunfilecheck)             After:  EAC26B32B30E1A5B1A930CC9D34C9B68;1179.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 473.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 478.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 478.
+Package rerunfilecheck Info: File `SSDD_Template_A2-4.out' has not changed.
+(rerunfilecheck)             Checksum: 7263FD23F59CFECCD28A0D8F0F9D4A57;1252.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 478.
  )
 (\end occurred inside a group at level 1)
 
-### simple group (level 1) entered at line 352 ({)
+### simple group (level 1) entered at line 357 ({)
 ### bottom level 
 Here is how much of TeX's memory you used:
- 7211 strings out of 493014
- 103020 string characters out of 6133351
+ 7213 strings out of 493014
+ 103050 string characters out of 6133351
  192981 words of memory out of 5000000
- 10632 multiletter control sequences out of 15000+600000
+ 10633 multiletter control sequences out of 15000+600000
  11348 words of font info for 30 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  29i,10n,29p,392b,511s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -575,10 +574,10 @@ x1000.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfbx1
 0.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfrm1000.
 pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfti1000.pf
 b>
-Output written on SSDD_Template_A2-4.pdf (9 pages, 142639 bytes).
+Output written on SSDD_Template_A2-4.pdf (10 pages, 144641 bytes).
 PDF statistics:
- 168 PDF objects out of 1000 (max. 8388607)
- 149 compressed objects within 2 object streams
- 24 named destinations out of 1000 (max. 500000)
- 153 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 177 PDF objects out of 1000 (max. 8388607)
+ 157 compressed objects within 2 object streams
+ 25 named destinations out of 1000 (max. 500000)
+ 161 words of extra memory for PDF output out of 10000 (max. 10000000)
 

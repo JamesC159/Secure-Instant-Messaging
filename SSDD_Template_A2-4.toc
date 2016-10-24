@@ -59,6 +59,9 @@
 \contentsline {subsection}{\numberline {2.5}BUDDY LIST}{1}{subsection.2.5}
 \select@language {english}
 \select@language {english}
+\contentsline {subsection}{\numberline {2.6}CLIENT ACCOUNT DATABASE}{1}{subsection.2.6}
+\select@language {english}
+\select@language {english}
 \select@language {english}
 \select@language {english}
 \select@language {english}

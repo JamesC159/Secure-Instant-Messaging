@@ -207,8 +207,8 @@ Section\ \ Page}
 \section[INTRODUCTION]{\selectlanguage{english}\bfseries\color{black}
 INTRODUCTION}
 {\selectlanguage{english}\itshape\color{black}
-The purpose of this document is to describe a secure internet instant 
-messaging system with supported functionalities, security features, 
+The purpose of this document is to describe the architectural components of secure internet instant 
+messaging system and the supported functionalities of each component, security features, 
 threat model, and attacks considered in a complete and concise manner. 
 The internet instant messaging system supports authentication of its users, 
 confidentiality of the messages and data exchanged between users, and 
@@ -217,8 +217,7 @@ This document will describe in general how users log into the system, establish
  sessions with other users, and how the system provides integrity and confidentiality 
  of message transfers between users as well as any other assumption that 
  have been made in the design of the implementation for the internet instant 
- messaging system.
-}
+ messaging system. \ }
 
 \bigskip
 
@@ -246,54 +245,60 @@ system and software architectural entities and components.  \ }
 ARCHITECTURE]{\selectlanguage{english}\bfseries\color{black} SYSTEM AND
 SOFTWARE ARCHITECTURE}
 {\selectlanguage{english}\itshape\color{black}
-This section of the document shall describe with detail every detailed
-design entity or component of the system as well as the relationship
-and interface between them. These architectural entities, when
+This section of the document shall describe with detail every component of the system as well as the relationship
+and interface between them. These architectural components, when
 integrated together as specified within this document, shall implement
 all functions performed by the system in response to an input or in
 support of an output as described by the project requirements specification.
-All architectural entities or components shall: be uniquely identifiable, be well described,
+All architectural components shall: be uniquely identifiable, be well described,
 have clear responsibilities, have well specified interfaces, and have
 well described interactions with other architectural entities. \ }
 
 \subsection{CLIENT}
 {\selectlanguage{english}\itshape\color{black}
-This subsection of the document should describe in detail the component that represents
+This subsection of the document shall describe in detail the component that represents
 a client in the system. A client consists of identification information such as IP address, port
 for TCP stream socket connection to the server and other clients, as well a buddy list that contains a
-list of possible clients that each client may establish a session with. Each client
+list of possible clients that each client may establish a session with via the session interface. Each client
 will have a shared session key with the server and other clients for confidential and 
 integrity protected message transfer. \ }
 
 \subsection{SERVER}
 {\selectlanguage{english}\itshape\color{black}
-This subsection of the document should describe in detail the component that represents the
+This subsection of the document shall describe in detail the component that represents the
 server in the system. The server is responsible for providing each client its buddy list,
-the session key for each client after log in authentication has been performed, and a ticket
+, authentication each client via the login interface the session key for each client after log in authentication has been performed, and a ticket
 for communication between end users that includes a shared session key among the end users. \ }
 
 \subsection{LOGIN INTERFACE}
 {\selectlanguage{english}\itshape\color{black}
-This subsection of the document should describe in detail the component in which
-users log into the system. The login interface should handle the authentication of users
-trying to connect to the server and enter the system. Once authenticated, the user should
+This subsection of the document shall describe in detail the component in which
+clients log into the system. The login interface should handle the authentication of client
+trying to connect to the server and enter the system. Once authenticated, the client should
 be directed to the session interface to allow a session to be established between the server and
 client. \ }
  
  \subsection{SESSION INTERFACE}
  {\selectlanguage{english}\itshape\color{black}
- This subsection of the document should describe the component that handles
- establishing a session between two end users. The session interface is responsible for establishing
- a shared session key between the users and server as well as between end users. From
- the sessions keys, encryption and authentication keys will be derived for end user
- message transfers. This will allow confidentiality and integrity of the messages being transfered. \ }
+ This subsection of the document shall describe the component that handles
+ establishing a session between two clients. The session interface is responsible for establishing
+ a shared session key between the clients and server as well as between clients themselves. From
+ the sessions keys, encryption and authentication keys will be derived for client to client
+ message transfers. This will allow confidentiality and integrity of the messages being transferred. \ }
  
 \subsection{BUDDY LIST}
 {\selectlanguage{english}\itshape\color{black}
-This subsection of the document should describe the component that allows a client
+This subsection of the document shall describe the component that allows a client
 to establish a session with other clients in the system. The buddy list contains detailed
 information about each client in the system such as IP address, TCP stream socket port number
 and availability status. \ }
+
+\subsection{CLIENT ACCOUNT DATABASE}
+{\selectlanguage{english}\itshape\color{black}
+This subsection of the document shall describe the component that securely stores client identification
+information. This information is used by the login interface to authenticate each client in the system. client information 
+consists of username, SHA512 hash of password, salt associated with the password hash, IP address, last login timestamp, 
+unique identification number (maybe), and the current shared session key with the server.\ }
 
 \bigskip
 
@@ -360,10 +365,10 @@ THREAT IDENTIFICATION and ATTACKS CONSIDERED.
 This section of the document should describe with detail the design of
 the software being described in this document. This
 section shall specify the following supported functions that correspond to the
-relevant architectural entity and components: CLIENT, SERVER, 
+relevant architectural components: CLIENT, SERVER, CLIENT ACCOUNT DATABASE,
 LOGIN INTERFACE, SESSION INTERFACE, and BUDDY LIST as well as 
 how the security features mentioned in SECURITY FEATURES are implemented
-to provide authentication of users, message integrity, and message transfer
+to provide authentication of clients, message integrity, and message transfer
 confidentiality. \ }
 
 \subsection{DATA DICTIONARY}
