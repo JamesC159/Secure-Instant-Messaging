@@ -1,0 +1,19 @@
+\BOOKMARK [1][-]{section.1}{INTRODUCTION}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{DOCUMENT OVERVIEW}{section.1}% 2
+\BOOKMARK [1][-]{section.2}{SYSTEM AND SOFTWARE ARCHITECTURE}{}% 3
+\BOOKMARK [2][-]{subsection.2.1}{CLIENT}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.2}{SERVER}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.3}{LOGIN INTERFACE}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.4}{SESSION INTERFACE}{section.2}% 7
+\BOOKMARK [2][-]{subsection.2.5}{BUDDY LIST}{section.2}% 8
+\BOOKMARK [1][-]{section.3}{THREAT MODEL}{}% 9
+\BOOKMARK [2][-]{subsection.3.1}{THREAT IDENTIFICATION}{section.3}% 10
+\BOOKMARK [2][-]{subsection.3.2}{THREAT RANKING}{section.3}% 11
+\BOOKMARK [2][-]{subsection.3.3}{ENTRY POINTS}{section.3}% 12
+\BOOKMARK [2][-]{subsection.3.4}{ASSETS}{section.3}% 13
+\BOOKMARK [2][-]{subsection.3.5}{ATTACKS CONSIDERED}{section.3}% 14
+\BOOKMARK [2][-]{subsection.3.6}{SECURITY FEATURES}{section.3}% 15
+\BOOKMARK [1][-]{section.4}{SOFTWARE DETAILED DESIGN}{}% 16
+\BOOKMARK [2][-]{subsection.4.1}{DATA DICTIONARY}{section.4}% 17
+\BOOKMARK [1][-]{section.5}{APPENDIX A. \040[insert name here]}{}% 18
+\BOOKMARK [1][-]{section.6}{APPENDIX B. \040[insert name here]}{}% 19
