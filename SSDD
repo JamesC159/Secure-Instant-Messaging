@@ -256,18 +256,56 @@ All architectural entities or components shall: be uniquely identifiable, be wel
 have clear responsibilities, have well specified interfaces, and have
 well described interactions with other architectural entities. \ }
 
-\bigskip
+\subsection{CLEINT}
+{\selectlanguage{english}\itshape\color{black}
+This subsection of the document should describe in detail the component that represents
+a client in the system. A client consists of identification information such as IP address, port
+for TCP stream socket connection to the server and other clients, as well a buddy list that contains a
+list of possible clients that each client may establish a session with. Each client
+will have a shared session key with the server and other clients for confidential and 
+integrity protected message transfer. \ }
 
-{\selectlanguage{english}\color{black}
-[Insert text here.]}
+\subsection{SERVER}
+{\selectlanguage{english}\itshape\color{black}
+This subsection of the document should describe in detail the component that represents the
+server in the system. The server is responsible for providing each client its buddy list,
+the session key for each client after log in authentication has been performed, and a ticket
+for communication between end users that includes a shared session key among the end users. \ }
+
+\subsection{LOGIN INTERFACE}
+{\selectlanguage{english}\itshape\color{black}
+This subsection of the document should describe in detail the component in which
+users log into the system. The login interface should handle the authentication of users
+trying to connect to the server and enter the system. Once authenticated, the user should
+be directed to the session interface to allow a session to be established between the server and
+client. \ }
+ 
+ \subsection{SESSION INTERFACE}
+ {\selectlanguage{english}\itshape\color{black}
+ This subsection of the document should describe the component that handles
+ establishing a session between two end users. The session interface is responsible for establishing
+ a shared session key between the users and server as well as between end users. From
+ the sessions keys, encryption and authentication keys will be derived for end user
+ message transfers. This will allow confidentiality and integrity of the messages being transfered. \ }
+ 
+\subsection{BUDDY LIST}
+{\selectlanguage{english}\itshape\color{black}
+This subsection of the document should describe the component that allows a client
+to establish a session with other clients in the system. The buddy list contains detailed
+information about each client in the system such as IP address, TCP stream socket port number
+and availability status. \ }
 
 \bigskip
 
 {\selectlanguage{english}\itshape\color{black}
 Provide a diagram and description of the architecture.}
 
+\bigskip
+
 {\selectlanguage{english}\color{black}
 [Insert diagram here.]}
+
+\bigskip
 
 {\selectlanguage{english}\color{black}
 [Insert diagram here.]}
@@ -285,12 +323,13 @@ and detailed manner. \ }
 {\selectlanguage{english}\itshape\color{black}
 This subsection of the document describes the threats
 considered and identified during the design of the system referenced
- in this document. \ }
+in this document. Threats correspond to outside entities that are considered
+malicious or a danger to the integrity, privacy, and functionality of the system. \ }
 
 \subsection{THREAT RANKING}
 {\selectlanguage{english}\itshape\color{black}
-This subsection of the document ranks the threats identified in the
-previous subsection from the perspective of risk factors. \ }
+This subsection of the document ranks the threats identified in THREAT IDENTIFICATION
+ from the perspective of risk factors. \ }
 
 \subsection{ENTRY POINTS}
 {\selectlanguage{english}\itshape\color{black}
@@ -321,16 +360,17 @@ THREAT IDENTIFICATION and ATTACKS CONSIDERED.
 This section of the document should describe with detail the design of
 the software being described in this document. This
 section shall specify the following supported functions that correspond to the
-relevant architectural entity and components: logging into the system, establishing a session with other 
-another user, and how the security features mentioned in SECURITY FEATURES are implemented
+relevant architectural entity and components: CLIENT, SERVER, 
+LOGIN INTERFACE, SESSION INTERFACE, and BUDDY LIST as well as 
+how the security features mentioned in SECURITY FEATURES are implemented
 to provide authentication of users, message integrity, and message transfer
 confidentiality. \ }
 
 \subsection{DATA DICTIONARY}
 {\selectlanguage{english}\itshape\color{black}
 This subsection shall list and describe all the data and data structures
-defined and/or used by the components and entities specified above.
-\ For each data item or structure indicate where it is defined,
+defined and/or used by the components and entities specified above. 
+For each data item or structure indicate where it is defined,
 referenced, and modified.}
 
 \begin{flushleft}
