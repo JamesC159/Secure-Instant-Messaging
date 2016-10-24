@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  24 OCT 2016 14:38
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  24 OCT 2016 14:56
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -495,7 +495,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 <to be read again> 
                    \relax 
 l.243 \clearpage
-                \pagestyle{Convertvi} [1
+                \pagestyle{Standard} [1
 
 ]pdfTeX warning (ext4): destination with the same identifier (name{page.2}) has
  been already used, duplicate ignored
@@ -509,7 +509,7 @@ l.304
 <to be read again> 
                    \relax 
 l.318 \clearpage
-                \pagestyle{Convertvi} [3] [4
+                \pagestyle{Standard} [3] [4
 
 ]
 Overfull \hbox (8.674pt too wide) in paragraph at lines 383--446
@@ -540,7 +540,7 @@ Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 478.
 Here is how much of TeX's memory you used:
  7217 strings out of 493014
  103074 string characters out of 6133351
- 192981 words of memory out of 5000000
+ 192933 words of memory out of 5000000
  10633 multiletter control sequences out of 15000+600000
  11348 words of font info for 30 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -553,7 +553,7 @@ x1000.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfbx1
 0.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfrm1000.
 pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfti1000.pf
 b>
-Output written on SSDD_Template_A2-4.pdf (10 pages, 144909 bytes).
+Output written on SSDD_Template_A2-4.pdf (10 pages, 145208 bytes).
 PDF statistics:
  181 PDF objects out of 1000 (max. 8388607)
  161 compressed objects within 2 object streams
