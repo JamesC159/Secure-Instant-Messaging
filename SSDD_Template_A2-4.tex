@@ -204,9 +204,7 @@ Section\ \ Page}
 
 \bigskip
 \clearpage\setcounter{page}{1}\pagestyle{Standard}
-\section[INTRODUCTION]{\selectlanguage{english}\bfseries\color{black}
-INTRODUCTION}
-{\selectlanguage{english}\itshape\color{black}
+\section{INTRODUCTION}
 The purpose of this document is to describe the architectural components of secure internet instant 
 messaging system and the supported functionalities of each component, security features, 
 threat model, and attacks considered in a complete and concise manner. 
@@ -217,262 +215,184 @@ This document will describe in general how users log into the system, establish
  sessions with other users, and how the system provides integrity and confidentiality 
  of message transfers between users as well as any other assumption that 
  have been made in the design of the implementation for the internet instant 
- messaging system. \ }
+ messaging system.
 
 \bigskip
 
 \subsection{DOCUMENT OVERVIEW}
-{\selectlanguage{english}\itshape\color{black}
 This subsection shall provide an overview of the organization of this
-SSDD.}
+SSDD.
 
-{\selectlanguage{english}\color{black}
-Section 2 of this document describes the system and software
-architecture from the developer and user viewpoint. \ }
+\begin{itemize}
+\item Section 2 of this document describes the system architecture.
+\item Section 3 provides a description of the threat model considered for this system.
+\item Section 4 provides a description of the system design. That is, it described the protocols for communication
+and authentication between client-client and client-server.
+\end{itemize}
 
-{\selectlanguage{english}\color{black}
-Section 3 provides a detailed description of the threat model considered 
-in the security protocol design. \ }
+\bigskip
 
-{\selectlanguage{english}\color{black}
-Section 4 provides a detailed description of the design of the software supported
-functionalities as well as the data structures required for implementation
-of supported functions that contribute to the implementation of the overall
-system and software architectural entities and components.  \ }
+\subsection{ASSUMPTIONS}
+There have been a number of assumptions that have been made during the design of the system referenced in this document.
 
-\clearpage\pagestyle{Standard}
-\section[SYSTEM AND SOFTWARE
-ARCHITECTURE]{\selectlanguage{english}\bfseries\color{black} SYSTEM AND
-SOFTWARE ARCHITECTURE}
-{\selectlanguage{english}\itshape\color{black}
-This section of the document shall describe with detail every component of the system as well as the relationship
-and interface between them. These architectural components, when
+\begin{enumerate}
+\item DOS attacks are not relevant.
+\item Server database break attacks are not relevant.
+\item Identity hiding is not relevant.
+\item Clients may be malicious.
+\item Clients trust the server's public key.
+\item A client may only have a connection with one other client at any time.
+\item The server and client have already exchanged username/password information by some outside 
+mechanism.
+\end{enumerate}
+
+\bigskip
+
+\section{SYSTEM AND SOFTWARE
+ARCHITECTURE}
+This section of the document shall describe, with detail, the relationship
+and functionality of each component in the system. These components, when
 integrated together as specified within this document, shall implement
 all functions performed by the system in response to an input or in
 support of an output as described by the project requirements specification.
-All architectural components shall: be uniquely identifiable, be well described,
-have clear responsibilities, have well specified interfaces, and have
-well described interactions with other architectural entities. \ }
+All components shall: be uniquely identifiable, be well described,
+have clear responsibilities, and have well described interactions with other dependent components.
+
+\bigskip
 
 \subsection{CLIENT}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document shall describe in detail the component that represents
-a client in the system. A client consists of identification information such as IP address, port
-for TCP stream socket connection to the server and other clients, as well a buddy list that contains a
-list of possible clients that each client may establish a session with via the session interface. Each client
-will have a shared session key with the server and other clients for confidential and 
-integrity protected message transfer. \ }
+A client consists of identification information such as IP address port
+for TCP stream socket connection to the server and other clients. 
+Each client will have a shared session key for confidential and 
+integrity protected message transfer with the server and any other clients that it may have a
+active session with at the time. The client is not responsible for maintaining any long term state
+for the sake of mobility and security. The client component is not responsible for remembering
+any username and password pairs the human using the machine may need in order to log into the
+system.
+
+\bigskip
 
 \subsection{SERVER}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document shall describe in detail the component that represents the
-server in the system. The server is responsible for providing each client its buddy list,
-, authentication each client via the login interface the session key for each client after log in authentication has been performed, and a ticket
-for communication between end users that includes a shared session key among the end users. \ }
+The server is responsible for providing each client its buddy list, authenticating each client based on the
+username and password provided by the client, and handling client-client connection requests in a secure manner. The server should store and maintain the buddy list for each client on its behalf as well as maintaining a
+secure database of client authentication information.
+
+\bigskip
 
 \subsection{LOGIN INTERFACE}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document shall describe in detail the component in which
-clients log into the system. The login interface should handle the authentication of client
-trying to connect to the server and enter the system. Once authenticated, the client should
-be directed to the session interface to allow a session to be established between the server and
-client. \ }
+The login interface is responsible for sending the client authentication information to the server as well as
+receiving the the shared session key from the server once the client has been authenticated and pass it to the client workstation for communication with the server. The login interface is also responsible for informing the
+client of invalid authentication information if the server responds with an invalid authentication response.
+
+\bigskip
  
- \subsection{SESSION INTERFACE}
- {\selectlanguage{english}\itshape\color{black}
- This subsection of the document shall describe the component that handles
- establishing a session between two clients. The session interface is responsible for establishing
- a shared session key between the clients and server as well as between clients themselves. From
- the sessions keys, encryption and authentication keys will be derived for client to client
- message transfers. This will allow confidentiality and integrity of the messages being transferred. \ }
+\subsection{SESSION INTERFACE}
+The session interface is responsible for establishing a client-client session. The session interface will send
+client-client session connection requests to the server and receive the response from the server. The response
+consists of a shared client-client session key as well as a ticket to the client being requested for
+communication. The session interface is then responsible for sending the ticket to the client that has been
+requested. In this manner, a client-client session may be established. Encryption an authentication keys for
+communication will be derived from the shared session key received from the server. This will allow
+confidentiality and integrity of the messages being transferred during the client-client communication session.
+
+\bigskip
  
 \subsection{BUDDY LIST}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document shall describe the component that allows a client
-to establish a session with other clients in the system. The buddy list contains detailed
-information about each client in the system such as IP address, TCP stream socket port number
-and availability status. \ }
+The buddy list is responsible for maintaining client information such as username, IP address, port number for
+TCP stream socket connection, availability (i.e if a client is online of offline). The buddy list allows a client to
+have visibility of other clients that it has a direct relationship with. This information will allow clients to create
+a client-client session request to send to the server. The buddy list is maintained by the server. Clients will send
+buddy list modification requests to the server in order to make changes to the buddy list it owns. Each client
+is only allowed to own one buddy list. The server will not accept any modification requests form any clients that
+do not own the buddy list.
+\bigskip
 
 \subsection{CLIENT ACCOUNT DATABASE}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document shall describe the component that securely stores client identification
-information. This information is used by the login interface to authenticate each client in the system. client information 
-consists of username, SHA512 hash of password, salt associated with the password hash, IP address, last login timestamp, 
-unique identification number (maybe), and the current shared session key with the server.\ }
+The client account database is responsible for storing client authentication information such as username, 
+SHA512 hash of password concatenated with a random salt, and the salt that is associated with the password
+hash. The client account database may only be modified by the server. The server will own only one client
+account database.
 
 \bigskip
 
-{\selectlanguage{english}\itshape\color{black}
-Provide a diagram and description of the architecture.}
-
-\bigskip
-
-{\selectlanguage{english}\color{black}
-[Insert diagram here.]}
-
-\bigskip
-
-{\selectlanguage{english}\color{black}
-[Insert diagram here.]}
-
-\clearpage\pagestyle{Standard}
 \section{THREAT MODEL}
-{\selectlanguage{english}\itshape\color{black} 
-This section of the document should describe with detail the potential threats
-and risks considered for the system described in this document. Security features,
-threat ranking, assets, attacks considered, countermeasures 
-and mitigation will be identified, quantified, and addressed in a complete 
-and detailed manner. \ }
- 
-\subsection{THREAT IDENTIFICATION}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document describes the threats
-considered and identified during the design of the system referenced
-in this document. Threats correspond to outside entities that are considered
-malicious or a danger to the integrity, privacy, and functionality of the system. \ }
+This section of the document shall list the different assets that have been identified to be of important to
+security, the different attacks considered that could harm or compromise the assets, and the security features
+that are implemented to mitigate or prevent the attacks that could harm or compromise the assets identified.
 
-\subsection{THREAT RANKING}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document ranks the threats identified in THREAT IDENTIFICATION
- from the perspective of risk factors. \ }
-
-\subsection{ENTRY POINTS}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document defines the interfaces through which an attacker
-can interact with the system or supply it data. \ }
+\bigskip
 
 \subsection{ASSETS}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document identifies and lists the resources/items
-of interest to an attacker. Assets can be both physical and abstract. \ }
+The assets identified to be of importance are:
+ 
+ \begin{itemize}
+ \item Username/Password pairs
+ \item Session keys for client-server and client-client communication
+ \item The server's private RSA key
+ \end{itemize}
+ 
+ \bigskip
 
 \subsection{ATTACKS CONSIDERED}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document lists any attacks considered during the
-assessment and identification of potential threats and against the security
-protocols described in SECURITY FEATURES.
-\ }
+The attacks that have been considered against the assets described above are:
 
+\begin{itemize}
+\item Eavespropping based attacks
+\item Session hijacking
+\item Malicious clients
+\end{itemize}
+
+\bigskip
+ 
 \subsection{SECURITY FEATURES}
-{\selectlanguage{english}\itshape\color{black}
-This subsection of the document lists and describes the provided security
-controls and policies to mitigate or prevent the threats and attacks identified in 
-THREAT IDENTIFICATION and ATTACKS CONSIDERED.
+Security features correspond to the actions taken to mitigate or prevent the attacks
+on the assets considered above.
 
-\clearpage\pagestyle{Standard}
-\section{SOFTWARE DETAILED DESIGN}
-{\selectlanguage{english}\itshape\color{black}
-This section of the document should describe with detail the design of
-the software being described in this document. This
-section shall specify the following supported functions that correspond to the
-relevant architectural components: CLIENT, SERVER, CLIENT ACCOUNT DATABASE,
-LOGIN INTERFACE, SESSION INTERFACE, and BUDDY LIST as well as 
-how the security features mentioned in SECURITY FEATURES are implemented
-to provide authentication of clients, message integrity, and message transfer
-confidentiality. \ }
+\begin{itemize}
+\item RSA Authenticated Diffie-Helman session key exchange to allow clients to establish a secure session with the server.
+\item AES encryption in Cipher Block Chaining mode of operation for confidentiality of message transfer.
+\item CBC Residue for integrity verification of each message being transferred.
+\end{itemize} 
 
-\subsection{DATA DICTIONARY}
-{\selectlanguage{english}\itshape\color{black}
-This subsection shall list and describe all the data and data structures
-defined and/or used by the components and entities specified above. 
-For each data item or structure indicate where it is defined,
-referenced, and modified.}
+\bigskip 
 
+\section{PROTOCOL DESIGN}
+
+\bigskip
+
+\subsection{CLIENT-SERVER / LOGGING IN}
 \begin{flushleft}
-\tablehead{}
-\begin{supertabular}{|m{0.9837598in}|m{0.9212598in}|m{1.8587599in}|m{1.2962599in}|m{1.1330599in}|}
-\hline
-\multicolumn{5}{|m{6.50806in}|}{\centering
-\selectlanguage{english}\bfseries\color{black} Data Dictionary}\\\hline
-\centering \selectlanguage{english}\bfseries\color{black} Name &
-\centering \selectlanguage{english}\bfseries\color{black} Type/Range &
-\centering \selectlanguage{english}\bfseries\color{black} Defined
-by{\dots} &
-\centering \selectlanguage{english}\bfseries\color{black} Referenced
-by{\dots} &
-\centering\arraybslash \selectlanguage{english}\bfseries\color{black}
-Modified by{\dots}\\\hline
-~
- &
-~
- &
-~
- &
-~
- &
-~
-\\\hline
-~
- &
-~
- &
-~
- &
-~
- &
-~
-\\\hline
-~
- &
-~
- &
-~
- &
-~
- &
-~
-\\\hline
-~
- &
-~
- &
-~
- &
-~
- &
-~
-\\\hline
-~
- &
-~
- &
-~
- &
-~
- &
-~
-\\\hline
-\end{supertabular}
+\includegraphics[scale=0.5]{login}
 \end{flushleft}
-
+ 
 \bigskip
-
-
+ 
+\subsection{RETREIVING BUDDY LISTS}
+\begin{flushleft}
+\includegraphics[scale=0.5]{buddies}
+\end{flushleft}
+ 
+ \bigskip
+ 
+\subsection{CLIENT-CLIENT SESSION ESTABLISHMENT}
+\begin{flushleft}
+\includegraphics[scale=0.5]{clientreq}
+\end{flushleft}
+ 
 \bigskip
-
-\clearpage\pagestyle{Standard}
-\section[APPENDIX A. \ [insert name
-here{]}]{\selectlanguage{english}\bfseries\color{black} APPENDIX A.
-\ [insert name here]}
-{\selectlanguage{english}\itshape\color{black}
-Include copies of specifications, mockups, prototypes, etc. supplied or
-derived from the customer. \ Appendices are labeled A, B, {\dots}n.
-\ \ Reference each appendix as appropriate in the text of the document.
-}
-
-{\selectlanguage{english}\color{black}
-\ [ insert appendix A here ]}
-
-\clearpage\pagestyle{Standard}
-\section[APPENDIX B. \ [insert name
-here{]}]{\selectlanguage{english}\bfseries\color{black} APPENDIX B.
-\ [insert name here]}
-
+ 
+\subsection{MUTUAL AUTHENTICATION}
+During mutual authentication, order of the clients in the encrypted message with the shared session key between
+the clients matters. The first client in the message is the originating client while the second client in the message
+is the destination client. That means, switching the order can allow authentication of the clients.
+\begin{flushleft}
+\includegraphics[scale=0.5]{mauth}
+\end{flushleft}
+ 
 \bigskip
-
-{\selectlanguage{english}\color{black}
-[ insert appendix B here ]}
-
-
-\bigskip
+ 
+\subsection{DERIVING ENCRYPTION/AUTHENTICATION KEYS}
+\begin{flushleft}
+\includegraphics[scale=0.5]{keys}
+\end{flushleft}
 \end{document}
