@@ -186,15 +186,12 @@ CS4349.001 SSDD
 \par}
 
 \clearpage{\centering\selectlanguage{english}\bfseries\color{black}
-[ put program /system name here ]
+An Internet Instant Messaging System
 \par}
 
 {\centering\selectlanguage{english}\bfseries\color{black}
 TABLE OF CONTENTS
 \par}
-
-{\selectlanguage{english}\bfseries\color{black}
-Section\ \ Page}
 
 \setcounter{tocdepth}{9}
 \renewcommand\contentsname{}
@@ -205,17 +202,16 @@ Section\ \ Page}
 \bigskip
 \clearpage\setcounter{page}{1}\pagestyle{Standard}
 \section{INTRODUCTION}
-The purpose of this document is to describe the architectural components of secure internet instant 
-messaging system and the supported functionalities of each component, security features, 
-threat model, and attacks considered in a complete and concise manner. 
+The purpose of this document is to describe the architectural components for a secure internet instant 
+messaging system and the supported functionalities of each component, and security features and threat model.
 The internet instant messaging system supports authentication of its users, 
 confidentiality of the messages and data exchanged between users, and 
 verification of the integrity of messages and data exchanged between its users. 
-This document will describe in general how users log into the system, establish
- sessions with other users, and how the system provides integrity and confidentiality 
- of message transfers between users as well as any other assumption that 
- have been made in the design of the implementation for the internet instant 
- messaging system.
+This document will describe, in general, how users log into the system, establish
+sessions with other users, and how the system provides integrity and confidentiality 
+of message transfers between users as well as any other assumption that 
+have been made in the design of the implementation for the internet instant 
+messaging system.
 
 \bigskip
 
@@ -237,7 +233,7 @@ There have been a number of assumptions that have been made during the design of
 
 \begin{enumerate}
 \item DOS attacks are not relevant.
-\item Server database break attacks are not relevant.
+\item Server database breakin attacks are not relevant.
 \item Identity hiding is not relevant.
 \item Clients may be malicious.
 \item Clients trust the server's public key.
@@ -261,20 +257,19 @@ have clear responsibilities, and have well described interactions with other dep
 \bigskip
 
 \subsection{CLIENT}
-A client consists of identification information such as IP address port
-for TCP stream socket connection to the server and other clients. 
-Each client will have a shared session key for confidential and 
-integrity protected message transfer with the server and any other clients that it may have a
-active session with at the time. The client is not responsible for maintaining any long term state
-for the sake of mobility and security. The client component is not responsible for remembering
-any username and password pairs the human using the machine may need in order to log into the
+A client consists of identification information such as username/password for client-server authentication and IP
+address and port for TCP stream socket connection to the server and other clients. 
+Each client will have a shared session key for confidential and integrity protected message transfer with the
+server and any other clients that it may have an active session with at the time. The client is not responsible for
+maintaining any long term state for the sake of mobility and security. The client component is not responsible for
+remembering any username and password pairs the human using the machine may need in order to log into the
 system.
 
 \bigskip
 
 \subsection{SERVER}
 The server is responsible for providing each client its buddy list, authenticating each client based on the
-username and password provided by the client, and handling client-client connection requests in a secure manner. The server should store and maintain the buddy list for each client on its behalf as well as maintaining a
+username and password provided by the client, and handling client-client connection requests in a secure manner. The server should store and maintain the buddy list for each client on its behalf as well as maintain a
 secure database of client authentication information.
 
 \bigskip
@@ -290,21 +285,20 @@ client of invalid authentication information if the server responds with an inva
 The session interface is responsible for establishing a client-client session. The session interface will send
 client-client session connection requests to the server and receive the response from the server. The response
 consists of a shared client-client session key as well as a ticket to the client being requested for
-communication. The session interface is then responsible for sending the ticket to the client that has been
+communication. The session interface is responsible for sending the ticket to the client that has been
 requested. In this manner, a client-client session may be established. Encryption an authentication keys for
 communication will be derived from the shared session key received from the server. This will allow
-confidentiality and integrity of the messages being transferred during the client-client communication session.
+confidentiality and integrity verification of the messages being transferred during the client-client communication session.
 
 \bigskip
  
 \subsection{BUDDY LIST}
 The buddy list is responsible for maintaining client information such as username, IP address, port number for
-TCP stream socket connection, availability (i.e if a client is online of offline). The buddy list allows a client to
+TCP stream socket connection, and availability (i.e if a client is online or offline). The buddy list allows a client to
 have visibility of other clients that it has a direct relationship with. This information will allow clients to create
-a client-client session request to send to the server. The buddy list is maintained by the server. Clients will send
-buddy list modification requests to the server in order to make changes to the buddy list it owns. Each client
-is only allowed to own one buddy list. The server will not accept any modification requests form any clients that
-do not own the buddy list.
+a client-client session request to send to the server. The buddy list is maintained by the server. Each client
+is only allowed to own one buddy list on the server. 
+
 \bigskip
 
 \subsection{CLIENT ACCOUNT DATABASE}
@@ -316,9 +310,9 @@ account database.
 \bigskip
 
 \section{THREAT MODEL}
-This section of the document shall list the different assets that have been identified to be of important to
-security, the different attacks considered that could harm or compromise the assets, and the security features
-that are implemented to mitigate or prevent the attacks that could harm or compromise the assets identified.
+This section of the document shall list the different assets that have been identified to be of importantance to
+security, the different malicious attacks considered, and the security features
+that are implemented to mitigate or prevent the attacks that could harm or compromise the assets listed.
 
 \bigskip
 
@@ -326,7 +320,7 @@ that are implemented to mitigate or prevent the attacks that could harm or compr
 The assets identified to be of importance are:
  
  \begin{itemize}
- \item Username/Password pairs
+ \item Username/password pairs
  \item Session keys for client-server and client-client communication
  \item The server's private RSA key
  \end{itemize}
@@ -352,47 +346,103 @@ on the assets considered above.
 \item RSA Authenticated Diffie-Helman session key exchange to allow clients to establish a secure session with the server.
 \item AES encryption in Cipher Block Chaining mode of operation for confidentiality of message transfer.
 \item CBC Residue for integrity verification of each message being transferred.
+\item Nonces for replay protection
+\item Mutual authentication between clients
 \end{itemize} 
 
 \bigskip 
 
 \section{PROTOCOL DESIGN}
+This section of the document shall display the design of the protocols to allow secure communication and
+session establishment.
+\subsection{ENTITIES}
+\begin{enumerate}
+\item Server
+\item ClientA
+\item ClientB
+\end{enumerate}
+
+\bigskip
+
+\subsection{ITEMS}
+\begin{enumerate}
+\item $S_{RSA}$ Server RSA public and private key pair.
+\item $N_{S}$ nonce from Server for replay protection
+\item $K_{SA}$  Session key between Server and ClientA
+\item $K_{SB}$  Session key between Server and ClientB
+\item $K_{AB}$  Session key between ClientA and ClientB
+\item $E_{A}$  Encryption key for ClientA communication to ClientB
+\item $D_{A}$  Decryption key for ClientA communication from ClientB
+\item $E_{B}$  Encryption key for ClientB communication to ClientA
+\item $D_{B}$  Decryption key for ClientB communication from ClientA
+\item $Integ_{A}$  integrity verification for messages ClientA sends
+\item $Integ_{B}$  integrity verification for messages ClientB sends
+\end{enumerate}
 
 \bigskip
 
 \subsection{CLIENT-SERVER / LOGGING IN}
-\begin{flushleft}
-\includegraphics[scale=0.5]{login}
-\end{flushleft}
+Due to the assumption that the server database cannot be broken into and DOS attacks are not relevant, integrity protecting the initial login exchange is not needed. This is due to the fact that if an adversary was to somehow obtain $S_{RSA}$, the only thing the adversary could do is perform a DOS attack by changing the contents of the messages being transferred. Although, they would not obtain authentication due to the hash of the password and salt.
+
+\bigskip
+
+\begin{enumerate}
+\item ClientA $\Rightarrow$ $S_{RSA}$\{username\} $\Rightarrow$ Server
+\item ClientA $\Leftarrow$ $S_{RSA}$[$N_{S}$, salt] $\Leftarrow$ Server
+\item ClientA $\Rightarrow$ $S_{RSA}$\{username, hash(password, salt), $N_{S}$\} $\Rightarrow$ Server
+\item Server decrypts and checks client account database for ClientA authentication information.
+\item ClientA $\Leftarrow$ $S_{RSA}$[$g^{s}\mod{p}$] $\Leftarrow$ Server
+\item ClientA $\Rightarrow$ $S_{RSA}$\{$g^{a}\mod{p}$\} $\Rightarrow$ Server
+\item ClientA and Server have now agreed on $K_{SA} = g^{sa}\mod{p}$
+\end{enumerate}
  
 \bigskip
  
 \subsection{RETREIVING BUDDY LISTS}
-\begin{flushleft}
-\includegraphics[scale=0.5]{buddies}
-\end{flushleft}
+After establishing the shared session key using authenticated Diffie-Helman exchange, all communication with the server is confidential and integrity protected.
+
+\bigskip
+
+\begin{enumerate}
+\item ClientA $\Rightarrow$ $K_{SA}$\{Request for ClientA BuddyList\} $\Rightarrow$ Server
+\item ClientA $\Leftarrow$ $K_{SA}$\{ClientA BuddyList\} $\Leftarrow$ Server
+\end{enumerate}
  
  \bigskip
  
 \subsection{CLIENT-CLIENT SESSION ESTABLISHMENT}
-\begin{flushleft}
-\includegraphics[scale=0.5]{clientreq}
-\end{flushleft}
- 
+
+\bigskip
+
+\begin{enumerate}
+\item ClientA $\Rightarrow$ $K_{SA}$\{Request to talk to ClientB\} $\Rightarrow$ Server
+\item ClientA $\Leftarrow$ $K_{SA}$\{$K_{AB}$, ClientB, ticket to ClientB $=$ $K_{SB}$\{ClientA, $K_{AB}$\}\} $\Leftarrow$ Server
+\end{enumerate}
+
 \bigskip
  
 \subsection{MUTUAL AUTHENTICATION}
 During mutual authentication, order of the clients in the encrypted message with the shared session key between
 the clients matters. The first client in the message is the originating client while the second client in the message
 is the destination client. That means, switching the order can allow authentication of the clients.
-\begin{flushleft}
-\includegraphics[scale=0.5]{mauth}
-\end{flushleft}
+
+\bigskip
+
+\begin{enumerate}
+\item ClientA $\Rightarrow$ $K_{AB}$\{ClientA, ClientB, ticket to ClientB\}  $\Rightarrow$ ClientB
+\item ClientA $\Leftarrow$ $K_{AB}$\{ClientB, ClientA\} $\Leftarrow$ ClientB
+\end{enumerate}
  
 \bigskip
  
 \subsection{DERIVING ENCRYPTION/AUTHENTICATION KEYS}
-\begin{flushleft}
-\includegraphics[scale=0.5]{keys}
-\end{flushleft}
+
+\bigskip
+
+\begin{enumerate}
+\item ClientA computes $E_{A} = K_{AB} + 1$ for encryption and $D_{A} = K_{AB} + 2$ for decryption
+\item ClientB computes $E_{B} = K_{AB} + 2$ for encryption and $D_{B} = K_{AB} + 1$ for decryption
+\item ClientA computes $Integ_{A} = K_{AB} + 3$ for integrity verification
+\item ClientB computes $Integ_{B} = K_{AB} + 4$ for integrity verification
+\end{enumerate}
 \end{document}

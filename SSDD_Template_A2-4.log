@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  26 OCT 2016 23:37
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  28 OCT 2016 17:50
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -475,12 +475,12 @@ e
 [2
 
 ] (./SSDD_Template_A2-4.toc
-LaTeX Font Info:    Try loading font information for U+msa on input line 29.
+LaTeX Font Info:    Try loading font information for U+msa on input line 27.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 29.
+LaTeX Font Info:    Try loading font information for U+msb on input line 27.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -494,77 +494,52 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
  been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.272 
+l.267 
        [1
 
 ]pdfTeX warning (ext4): destination with the same identifier (name{page.2}) has
  been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.317 
-       [2] <login.png, id=136, 530.98375pt x 194.7275pt>
-File: login.png Graphic file (type png)
- <use login.png>
-Package pdftex.def Info: login.png used on input line 365.
-(pdftex.def)             Requested size: 265.49121pt x 97.3635pt.
-pdfTeX warning (ext4): destination with the same identifier (name{page.3}) has 
-been already used, duplicate ignored
+l.316 
+       [2]pdfTeX warning (ext4): destination with the same identifier (name{pag
+e.3}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.366 \end{flushleft}
-                      [3] <buddies.png, id=141, 331.2375pt x 82.3075pt>
-File: buddies.png Graphic file (type png)
-
-<use buddies.png>
-Package pdftex.def Info: buddies.png used on input line 372.
-(pdftex.def)             Requested size: 165.61833pt x 41.15364pt.
- <clientreq.png, id=142, 627.34375pt x 94.3525pt>
-File: clientreq.png Graphic file (type png)
-
-<use clientreq.png>
-Package pdftex.def Info: clientreq.png used on input line 379.
-(pdftex.def)             Requested size: 313.6711pt x 47.17612pt.
- <mauth.png, id=143, 516.93124pt x 78.2925pt>
-File: mauth.png Graphic file (type png)
-
-<use mauth.png>
-Package pdftex.def Info: mauth.png used on input line 389.
-(pdftex.def)             Requested size: 258.46498pt x 39.14615pt.
- <keys.png, id=144, 707.64375pt x 125.46875pt>
-File: keys.png Graphic file (type png)
- <use keys.png>
-Package pdftex.def Info: keys.png used on input line 396.
-(pdftex.def)             Requested size: 353.82101pt x 62.7342pt.
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 398.
-
-[4 <./login.png> <./buddies.png> <./clientreq.png> <./mauth.png> <./keys.png>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 398.
-
-(./SSDD_Template_A2-4.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 398.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 398.
+l.363 \end{enumerate}
+                      [3] [4]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 448.
+ [5]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 448.
+ (./SSDD_Template_A2-4.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 448.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 448.
 Package rerunfilecheck Info: File `SSDD_Template_A2-4.out' has not changed.
-(rerunfilecheck)             Checksum: 26DB4C44FACE7A4A32C6CCE8E08B3E8C;1295.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 398.
+(rerunfilecheck)             Checksum: 5223E77F6984181242439724CC1AE140;1408.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 448.
  ) 
 Here is how much of TeX's memory you used:
- 7240 strings out of 493014
- 103384 string characters out of 6133351
- 192933 words of memory out of 5000000
- 10647 multiletter control sequences out of 15000+600000
+ 7250 strings out of 493014
+ 103316 string characters out of 6133351
+ 193933 words of memory out of 5000000
+ 10629 multiletter control sequences out of 15000+600000
  10296 words of font info for 29 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 29i,5n,28p,392b,398s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 29i,5n,28p,479b,418s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc
 }{/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}<
-/usr/local/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></u
-sr/local/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr
-/local/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/l
-ocal/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb>
-Output written on SSDD_Template_A2-4.pdf (7 pages, 214353 bytes).
+/usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></
+usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></us
+r/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/
+local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/l
+ocal/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/loc
+al/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local
+/texlive/2016/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/local/t
+exlive/2016/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb>
+Output written on SSDD_Template_A2-4.pdf (8 pages, 130223 bytes).
 PDF statistics:
- 183 PDF objects out of 1000 (max. 8388607)
- 158 compressed objects within 2 object streams
- 33 named destinations out of 1000 (max. 500000)
- 186 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 242 PDF objects out of 1000 (max. 8388607)
+ 221 compressed objects within 3 object streams
+ 67 named destinations out of 1000 (max. 500000)
+ 177 words of extra memory for PDF output out of 10000 (max. 10000000)
 

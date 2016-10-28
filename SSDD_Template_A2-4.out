@@ -13,8 +13,10 @@
 \BOOKMARK [2][-]{subsection.3.2}{ATTACKS CONSIDERED}{section.3}% 13
 \BOOKMARK [2][-]{subsection.3.3}{SECURITY FEATURES}{section.3}% 14
 \BOOKMARK [1][-]{section.4}{PROTOCOL DESIGN}{}% 15
-\BOOKMARK [2][-]{subsection.4.1}{CLIENT-SERVER / LOGGING IN}{section.4}% 16
-\BOOKMARK [2][-]{subsection.4.2}{RETREIVING BUDDY LISTS}{section.4}% 17
-\BOOKMARK [2][-]{subsection.4.3}{CLIENT-CLIENT SESSION ESTABLISHMENT}{section.4}% 18
-\BOOKMARK [2][-]{subsection.4.4}{MUTUAL AUTHENTICATION}{section.4}% 19
-\BOOKMARK [2][-]{subsection.4.5}{DERIVING ENCRYPTION/AUTHENTICATION KEYS}{section.4}% 20
+\BOOKMARK [2][-]{subsection.4.1}{ENTITIES}{section.4}% 16
+\BOOKMARK [2][-]{subsection.4.2}{ITEMS}{section.4}% 17
+\BOOKMARK [2][-]{subsection.4.3}{CLIENT-SERVER / LOGGING IN}{section.4}% 18
+\BOOKMARK [2][-]{subsection.4.4}{RETREIVING BUDDY LISTS}{section.4}% 19
+\BOOKMARK [2][-]{subsection.4.5}{CLIENT-CLIENT SESSION ESTABLISHMENT}{section.4}% 20
+\BOOKMARK [2][-]{subsection.4.6}{MUTUAL AUTHENTICATION}{section.4}% 21
+\BOOKMARK [2][-]{subsection.4.7}{DERIVING ENCRYPTION/AUTHENTICATION KEYS}{section.4}% 22
