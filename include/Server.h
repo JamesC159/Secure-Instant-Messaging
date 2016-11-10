@@ -1,19 +1,33 @@
-//This will be the server side program
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef Server_h
+#define Server_h
 
-#include "Socket.h"
-#include <unistd.h>
-#include <sys/types.h> 
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include "ServerSocket.h"
+
 #include <string>
 
-class Server
-{
-   private:
-   public:
-   	Server(){}
-   	~Server(){}
+const int DEFAULT_PORT = 6161;
+
+class Server : public ServerSocket {
+   
+private:
+   
+   Server( const Server & );
+   void operator=( const Server & );
+   
+protected:
+   
+   Socket * listenSock;
+   
+public:
+   
+   Server( const int portno = DEFAULT_PORT ) {
+      listenSock = new ServerSocket( portno );
+   }
+   
+   ~Server() {
+      delete listenSock;
+   }
+   
+   Socket * getSocket() const { return listenSock; }
 };
 #endif

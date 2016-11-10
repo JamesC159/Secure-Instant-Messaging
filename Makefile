@@ -6,7 +6,7 @@ SDIR = src/
 ODIR = ${SDIR}obj/
 LDIR = lib/
 
-OBJS = $(addprefix ${ODIR}, Server.o Client.o Socket.o main.o)
+OBJS = $(addprefix ${ODIR}, Server.o ServerSocket.o Socket.o serverMain.o)
 CFLAGS = -Wall -g
 LDFLAGS=
 CC = g++
