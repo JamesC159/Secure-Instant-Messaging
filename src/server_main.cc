@@ -6,7 +6,7 @@
 int main( int argc, char ** argv ) {
    
    if( argc < 2 ) {
-      std::cout << "Usage: server portno\n";
+      std::cout << "Usage: ./server portno\n";
       return 0;
    }
    

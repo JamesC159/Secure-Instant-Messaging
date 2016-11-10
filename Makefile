@@ -3,34 +3,52 @@ SHELL = /bin/sh
 
 IDIR = include/
 SDIR = src/
-ODIR = ${SDIR}obj/
+SERVER_ODIR = ${SDIR}server_obj/
+CLIENT_ODIR = ${SDIR}client_obj/
 LDIR = lib/
 
-OBJS = $(addprefix ${ODIR}, Server.o ServerSocket.o Socket.o serverMain.o)
+SERVER_OBJS = $(addprefix ${SERVER_ODIR}, Server.o ServerSocket.o \
+               Socket.o BuddyList.o server_main.o)
+CLIENT_OBJS = $(addprefix ${CLIENT_ODIR}, Client.o ClientSocket.o \
+               Socket.o BuddyList.o client_main.o)
+
 CFLAGS = -Wall -g
 LDFLAGS=
 CC = g++
 INCLUDES = -I ${IDIR}
 LIBS = -lpthread
 
-MAINFUNC = ${SDIR}main.cc
-EXEC = driver
+SERVER_DRIVER = server
+CLIENT_DRIVER = client
 
-${ODIR}%.o: ${SDIR}%.cc
-	@echo "Compiling object file..."
+${SERVER_ODIR}%.o: ${SDIR}%.cc
+	@echo "Compiling server object file..."
 	${CC} ${CFLAGS} ${INCLUDES} -c $< -o $@
 
-all: ${OBJS}
-	@echo "Compiling project together..."
-	${CC} ${CFLAGS} ${INCLUDES} -o ${EXEC} ${OBJS} ${LIBS} ${LDFLAGS}
-	
-	
-clean:
-	-rm -f ${OBJS} ${EXEC}
-	@echo "All object files and the executable have been removed"
-	
-${OBJS}: | ${ODIR}
+${CLIENT_ODIR}%.o: ${SDIR}%.cc
+	@echo "Compiling client object file..."
+	${CC} ${CFLAGS} ${INCLUDES} -c $< -o $@
 
-${ODIR}:
-	mkdir ${ODIR}
-	@echo "${ODIR} was created because it did not exist"
+all: ${SERVER_DRIVER} ${CLIENT_DRIVER}
+
+${SERVER_DRIVER}: ${SERVER_OBJS}
+	${CC} ${CFLAGS} ${INCLUDES} -o ${SERVER_DRIVER} ${SERVER_OBJS} ${LIBS} ${LDFLAGS}
+
+${CLIENT_DRIVER}: ${CLIENT_OBJS}
+	${CC} ${CFLAGS} ${INCLUDES} -o ${CLIENT_DRIVER} ${CLIENT_OBJS} ${LIBS} ${LDFLAGS}
+
+${SERVER_OBJS}: | ${SERVER_ODIR}
+
+${SERVER_ODIR}:
+	mkdir ${SERVER_ODIR}
+	@echo "server object directory was created because it did not exist"
+
+${CLIENT_OBJS}: | ${CLIENT_ODIR}
+
+${CLIENT_ODIR}:
+	mkdir ${CLIENT_ODIR}
+	@echo "client object directory was created because it did not exist"
+
+clean:
+	-rm -f ${SERVER_OBJS} ${CLIENT_OBJS} ${SERVER_DRIVER} ${CLIENT_DRIVER}
+	@echo "All object files and the executable have been removed"
