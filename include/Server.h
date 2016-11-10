@@ -7,7 +7,7 @@
 
 const int DEFAULT_PORT = 6161;
 
-class Server : public ServerSocket {
+class Server {
    
 private:
    
