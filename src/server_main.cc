@@ -110,14 +110,14 @@ main ( int argc, char ** argv ) {
       return 1;
    }
    
+   // Listen
+   if ( ! listenSocket( &serverDesc ) ) {
+      perror( "ERROR listening for socket connections " );
+      return 1;
+   }
+   
    // Start client listen-accept phase.
    while ( true ) {
-      
-      // Listen
-      if ( ! listenSocket( &serverDesc ) ) {
-         perror( "ERROR listening for socket connections " );
-         return 1;
-      }
       
       //Accept
       if ( ! acceptSocket( &serverDesc, &clientDesc, &clientAddr ) ) {
