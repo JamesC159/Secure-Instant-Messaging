@@ -17,17 +17,21 @@ private:
 protected:
    
    Socket * listenSock;
+   Socket * newSock;
    
 public:
    
    Server( const int portno = DEFAULT_PORT ) {
       listenSock = new ServerSocket( portno );
+      newSock = new ServerSocket();
    }
    
    ~Server() {
       delete listenSock;
+      delete newSock;
    }
    
-   Socket * getSocket() const { return listenSock; }
+   Socket * getListener() const { return listenSock; }
+   Socket * getAcceptee() const { return newSock; }
 };
 #endif

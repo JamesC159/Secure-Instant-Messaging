@@ -46,6 +46,7 @@ public:
    bool listen() const;
    bool accept( Socket & );
    bool connect( std::string, const int );
+   //bool getBufSize() const;
    
    // Test methods
    bool isOpen() const { return sockDesc != -1; }

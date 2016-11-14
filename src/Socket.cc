@@ -76,6 +76,8 @@ bool Socket::listen() const {
 
 bool Socket::accept( Socket & newSock ) {
    
+   // This could cause an issue with sockAddr being overwritten since it is used
+   // to bind the server to an address and accept client connection requests.
    newSock.sockDesc = ::accept( sockDesc,
                                ( struct sockaddr * ) & sockAddr,
                                ( socklen_t * ) sizeof( sockAddr ) );
