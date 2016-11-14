@@ -71,7 +71,7 @@ int
 main ( int argc, char ** argv ) {
    
    struct sockaddr_in serverAddr, clientAddr;
-   int serverDesc = -1, clientDesc = -1;
+   int serverDesc = -1, clientDesc = 0;
    int bytes = 0, portNo = -1;
    char buffer [ MAX_BUF ];
    char * endptr;
@@ -146,4 +146,5 @@ main ( int argc, char ** argv ) {
    close ( serverDesc );
 
    return 0;
+   
 }  // End main()
