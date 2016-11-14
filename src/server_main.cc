@@ -155,7 +155,7 @@ main ( int argc, char ** argv ) {
       
       // Write message to the client.
       msg = (char *)calloc( MAX_BUF, sizeof( msg ) );
-      msg = "Received your message";
+      strcpy( msg, "Received your message" );
       bytes = write (clientDesc, msg, sizeof( msg ) - 1 );
       if ( bytes < 0 ) {
          perror( "ERROR: failed writing to socket " );
