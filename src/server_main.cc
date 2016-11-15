@@ -1,3 +1,5 @@
+#include <networking.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -14,110 +16,75 @@
 #include <iostream>
 #include <string>
 
-// Constants
+/*
+ * Global Constants
+ */
 const int MAX_BUF = 8192;
-const int MAX_CONN = 25;
 
-struct clientData {
-   int tid;
-   int clientDesc;
+/*
+ * Structures
+ */
+struct clientData
+{
+   int tid;          // Thread ID
+   int clientDesc;   // Client socket descriptor
 };
 
-// Socket Functions
-bool
-createSocket ( int & sockDesc ) {
-   
-   sockDesc = socket ( AF_INET,
-                       SOCK_STREAM,
-                       0 );
-   
-   if ( sockDesc < 0 ) {
-      return false;
+/*
+ * Helper functions
+ */
+void checkReadWrite( int bytes )
+{
+   // Reminder - stack buffer overflows. We need to do something about writing too
+   // much or reading too much
+   if ( bytes < 0 || bytes > MAX_BUF )
+   {
+      perror( "ERROR failed reading/writing to socket " );
    }
-   
-   return true;
 }
 
-bool
-bindSocket ( int & sockDesc,
-                 struct sockaddr_in & sockAddr ) {
-   
-   if ( bind( sockDesc,
-             (struct sockaddr *) & sockAddr,
-             (socklen_t)sizeof( sockAddr )) < 0 ) {
-      
-      return false;
-   }
-   
-   return true;
-}
-
-bool
-listenSocket ( int & sockDesc ) {
-   
-   if ( listen ( sockDesc, MAX_CONN ) < 0 ) {
-      return false;
-   }
-   
-   return true;
-}
-
-bool
-acceptSocket ( int & servDesc,
-               int & cliDesc,
-               struct sockaddr_in & cliAddr,
-               socklen_t & cliLen ) {
-   
-   cliDesc = accept( servDesc,
-                    (struct sockaddr *) & cliAddr,
-                     & cliLen );
-   
-   if ( cliDesc < 0 ) {
-      return false;
-   }
-   
-   return true;
-}
-
-// Thread functions
-void * clientWorker ( void * in ) {
+/*
+ * Thread functions
+ */
+void * clientWorker ( void * in )
+{
    
    int bytes = 0;                // Bytes read/written
-   char buffer [ MAX_BUF ];
-   char msg [ MAX_BUF ];
-   struct clientData * cData = (struct clientData *)in;
+   char buffer [ MAX_BUF ];      // Buffer to store message received from the client
+   char msg [ MAX_BUF ];         // Message to send to the client
+   struct clientData * cData;    // client thread data structure
    
-   // Zero out the buffer
+   cData = (struct clientData *)in;
    bzero( buffer, MAX_BUF );
    
-   // Read bytes from the client socket.
-   bytes = read ( cData -> clientDesc,
+   printf( "Client thread %d starting\n", cData -> tid );
+   
+   bytes = read( cData -> clientDesc,
                  buffer,
                  MAX_BUF - 1 );
    
-   if ( bytes < 0 ) {
-      perror( "ERROR failed reading from socket descriptor " );
-   }
+   checkReadWrite( bytes );
    
    printf( "Received message: %s\n", buffer );
-   
-   // Write to the client
-   strcpy( msg, "Received your message" );
-   bytes = write ( cData -> clientDesc,
+   sprintf( msg, "Received your message %s", buffer );
+
+   bytes = write( cData -> clientDesc,
                   msg,
                   sizeof( msg ) );
    
-   if ( bytes < 0 ) {
-      perror( "ERROR: failed writing to socket " );
-      return NULL;
-   }
+   checkReadWrite( bytes );
    
-   free ( msg );
+   printf( "Client thread %d exitting\n", cData -> tid );
 }
 
-// main()
+/*
+ * Main function
+ *
+ * TODO - validate the port number given on the command line.
+ */
 int
-main ( int argc, char ** argv ) {
+main ( int argc, char ** argv )
+{
    
    pthread_t clientThread;          // Thread to spawn client workers
    socklen_t clientLen = 0;         // Length of the client sockaddr_in structure
@@ -128,31 +95,41 @@ main ( int argc, char ** argv ) {
    int clientDesc = -1;             // Client socket descriptor
    int portNo = -1;                 // Port number server is binded to
    int rc = 0;                      // pthread_create() return value
-   int tid = 1;
-   char * endptr;                   // Ptr for error handling in strtol()
+   int tcount = 1;                  // Thread id counter for each client
    
    // Make sure the port number was provided in the command line arguments.
-   if ( argc < 2 ) {
-      std::cout << "Usage: ./server <portno>\n";
+   if ( argc < 2 )
+   {
+      fprintf( stderr, "Usage: ./server <portno>\n" );
       return 0;
    }
    
-   // Store the port number provided by the user.
-   portNo = ( int )strtol( argv[1], &endptr, 10 );
-   if ( portNo <= 0 ) {
-      perror ( "ERROR converting port number to integer " );
+   // Validate and store the port number provided by the user.
+   portNo = validatePort( argv[1] );
+   if ( portNo == -1 )
+   {
+      if ( errno )
+      {
+         perror( "ERROR failed to convert port number argument to integer" );
+      }
+      else
+      {
+         fprintf( stderr, "ERROR invalid port number\n" );
+      }
+      
       return 1;
    }
    
    // Create socket for server. Could handle failure here. For now, just terminating.
-   if ( ! createSocket( serverDesc ) ) {
-      perror ( "ERROR creating server socket " );
+   if ( ! createSocket( serverDesc ) )
+   {
+      perror( "ERROR creating server socket " );
       return 1;
    }
    
    // Zero out the server/client socket address structure.
-   bzero ( ( char * ) & serverAddr, sizeof( serverAddr ) );
-   bzero ( ( char * ) & clientAddr, sizeof( clientAddr ) );
+   bzero( ( char * ) & serverAddr, sizeof( serverAddr ) );
+   bzero( ( char * ) & clientAddr, sizeof( clientAddr ) );
    
    // Set the socket family, port number, and IP address.
    serverAddr.sin_family = AF_INET;
@@ -160,51 +137,54 @@ main ( int argc, char ** argv ) {
    serverAddr.sin_addr.s_addr = INADDR_ANY;
    
    // Bind the listener socket to an address.
-   if ( ! bindSocket ( serverDesc, serverAddr ) ) {
+   if ( ! bindSocket( serverDesc, serverAddr ) )
+   {
       perror ( "ERROR binding socket to an address " );
       return 1;
    }
    
-   // Listen
-   if ( ! listenSocket( serverDesc ) ) {
+   // Mark the server socket descriptor as a passive listener
+   if ( ! listenSocket( serverDesc ) )
+   {
       perror( "ERROR listening for socket connections " );
       return 1;
    }
    
-   // Store length of the client
    clientLen = sizeof( clientAddr );
    
    // Start client listen-accept phase.
-   while ( true ) {
+   while ( true )
+   {
       
-      //Accept
+      // Accept a client connection
       if ( ! acceptSocket(serverDesc,
                           clientDesc,
                           clientAddr,
-                          clientLen ) ) {
+                          clientLen ) )
+      {
          perror( "ERROR failed to accept socket connection " );
          return 1;
       }
       
-      // Create a new client data structure.
+      // Create a new clientData structure.
       cData = new struct clientData;
       cData -> clientDesc = clientDesc;
-      cData -> tid = tid;
+      cData -> tid = tcount;
       
-      // Spawn a worker thread for the client.
-      rc = pthread_create(&clientThread, NULL,
+      // Spawn a worker thread for the connecting client.
+      rc = pthread_create( &clientThread, NULL,
                           clientWorker, (void *) cData );
-      if ( rc ) {
+      if ( rc )
+      {
          fprintf( stderr, "ERROR creating client thread : %d\n", rc );
          return 1;
       }
       
-      cData -> tid++;
+      tcount++;
    }
    
-   // Close client and server socket descriptors.
-   close ( clientDesc );
-   close ( serverDesc );
+   close( clientDesc );
+   close( serverDesc );
 
    return 0;
    
