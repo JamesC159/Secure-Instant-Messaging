@@ -8,7 +8,7 @@ CLIENT_ODIR = ${SDIR}client_obj/
 LDIR = lib/
 
 SERVER_OBJS = $(addprefix ${SERVER_ODIR}, server_main.o)
-CLIENT_OBJS = $(addprefix ${CLIENT_ODIR}, client_main.o)
+CLIENT_OBJS = $(addprefix ${CLIENT_ODIR}, networking.o client_main.o)
 
 CFLAGS = -Wall -g
 LDFLAGS=
