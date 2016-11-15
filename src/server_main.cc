@@ -48,32 +48,44 @@ void checkReadWrite( int bytes )
  */
 void * clientWorker ( void * in )
 {
-   
+
    int bytes = 0;                // Bytes read/written
+   bool FIN = false;             // Flag form the client for closing the connection
    char buffer [ MAX_BUF ];      // Buffer to store message received from the client
    char msg [ MAX_BUF ];         // Message to send to the client
    struct clientData * cData;    // client thread data structure
    
    cData = (struct clientData *)in;
-   bzero( buffer, MAX_BUF );
-   
    printf( "Client thread %d starting\n", cData -> tid );
    
-   bytes = read( cData -> clientDesc,
-                 buffer,
-                 MAX_BUF - 1 );
-   
-   checkReadWrite( bytes );
-   
-   printf( "Received message: %s\n", buffer );
-   sprintf( msg, "Received your message %s", buffer );
+   while( ! FIN )
+   {
+      memset( buffer, '\0', sizeof( buffer ) );
 
-   bytes = write( cData -> clientDesc,
-                  msg,
-                  sizeof( msg ) );
-   
-   checkReadWrite( bytes );
-   
+      // Read from client
+      bytes = read(  cData -> clientDesc,
+                     buffer,
+                     MAX_BUF - 1 );
+      checkReadWrite( bytes );
+
+      // Check if FIN signal was received
+      if ( strcmp( buffer, FIN_STR ) == 0 )
+      {
+         FIN = true;
+      }
+
+      printf( "Received message: %s\n", buffer );  // Note there are 2 '\n' characters here since
+                                                   // the buffer is being filled from client stdin
+      sprintf( msg, "Received your message %s", buffer );
+
+      // Write ACK to client
+      bytes = write( cData -> clientDesc,
+                     msg,
+                     sizeof( msg ) );
+
+      checkReadWrite( bytes );
+   }
+
    printf( "Client thread %d exitting\n", cData -> tid );
 }
 
@@ -85,7 +97,7 @@ void * clientWorker ( void * in )
 int
 main ( int argc, char ** argv )
 {
-   
+
    pthread_t clientThread;          // Thread to spawn client workers
    socklen_t clientLen = 0;         // Length of the client sockaddr_in structure
    struct sockaddr_in serverAddr;   // Server socket address structure
@@ -155,12 +167,12 @@ main ( int argc, char ** argv )
    // Start client listen-accept phase.
    while ( true )
    {
-      
+
       // Accept a client connection
-      if ( ! acceptSocket(serverDesc,
-                          clientDesc,
-                          clientAddr,
-                          clientLen ) )
+      if ( ! acceptSocket( serverDesc,
+                           clientDesc,
+                           clientAddr,
+                           clientLen ) )
       {
          perror( "ERROR failed to accept socket connection " );
          return 1;
@@ -172,8 +184,10 @@ main ( int argc, char ** argv )
       cData -> tid = tcount;
       
       // Spawn a worker thread for the connecting client.
-      rc = pthread_create( &clientThread, NULL,
-                          clientWorker, (void *) cData );
+      rc = pthread_create( &clientThread, 
+                           NULL,
+                           clientWorker, 
+                           (void *) cData );
       if ( rc )
       {
          fprintf( stderr, "ERROR creating client thread : %d\n", rc );

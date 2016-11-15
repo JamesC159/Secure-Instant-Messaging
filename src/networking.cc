@@ -1,9 +1,6 @@
 #include <networking.h>
 #include <errno.h>
 
-const int MAX_CONN = 25;   // Maximum number of socket connection the server will
-                           // backlog
-
 int connectToHost(const char * hostName, int port)
 {
    int cliSock = socket(AF_INET, SOCK_STREAM, 0);
