@@ -8,14 +8,22 @@
 #include <errno.h>
 #include <string.h>
 #include <strings.h>
-
+#include <pthread.h>
+#include <semaphore.h>
 
 #include <iostream>
 #include <string>
 
+// Constants
 const int MAX_BUF = 8192;
 const int MAX_CONN = 25;
 
+struct clientData {
+   int tid;
+   int clientDesc;
+};
+
+// Socket Functions
 bool
 createSocket ( int & sockDesc ) {
    
@@ -71,20 +79,57 @@ acceptSocket ( int & servDesc,
    return true;
 }
 
+// Thread functions
+void * clientWorker ( void * in ) {
+   
+   int bytes = 0;                // Bytes read/written
+   char buffer [ MAX_BUF ];
+   char msg [ MAX_BUF ];
+   struct clientData * cData = (struct clientData *)in;
+   
+   // Zero out the buffer
+   bzero( buffer, MAX_BUF );
+   
+   // Read bytes from the client socket.
+   bytes = read ( cData -> clientDesc,
+                 buffer,
+                 MAX_BUF - 1 );
+   
+   if ( bytes < 0 ) {
+      perror( "ERROR failed reading from socket descriptor " );
+   }
+   
+   printf( "Received message: %s\n", buffer );
+   
+   // Write to the client
+   strcpy( msg, "Received your message" );
+   bytes = write ( cData -> clientDesc,
+                  msg,
+                  sizeof( msg ) );
+   
+   if ( bytes < 0 ) {
+      perror( "ERROR: failed writing to socket " );
+      return NULL;
+   }
+   
+   free ( msg );
+}
+
 // main()
 int
 main ( int argc, char ** argv ) {
    
+   pthread_t clientThread;          // Thread to spawn client workers
+   socklen_t clientLen = 0;         // Length of the client sockaddr_in structure
    struct sockaddr_in serverAddr;   // Server socket address structure
    struct sockaddr_in clientAddr;   // Client socket address structure
+   struct clientData * cData;       // Client worker thread data
    int serverDesc = -1;             // Server socket descriptor
-   int clientDesc = 0;              // Client socket descriptor
-   int bytes = 0;                   // Bytes read or written to sockets
+   int clientDesc = -1;             // Client socket descriptor
    int portNo = -1;                 // Port number server is binded to
-   socklen_t clientLen = 0;         // Length of the client sockaddr_in structure
-   char buffer [ MAX_BUF ];         // Buffer for reading from the client socket
+   int rc = 0;                      // pthread_create() return value
+   int tid = 1;
    char * endptr;                   // Ptr for error handling in strtol()
-   char * msg;                      // Message to write to the client socket
    
    // Make sure the port number was provided in the command line arguments.
    if ( argc < 2 ) {
@@ -132,6 +177,7 @@ main ( int argc, char ** argv ) {
    // Start client listen-accept phase.
    while ( true ) {
       
+      //Accept
       if ( ! acceptSocket(serverDesc,
                           clientDesc,
                           clientAddr,
@@ -140,32 +186,20 @@ main ( int argc, char ** argv ) {
          return 1;
       }
       
-      //Accept
-      if ( clientDesc < 0 ) {
-         perror( "ERROR accepting new socket connection " );
+      // Create a new client data structure.
+      cData = new struct clientData;
+      cData -> clientDesc = clientDesc;
+      cData -> tid = tid;
+      
+      // Spawn a worker thread for the client.
+      rc = pthread_create(&clientThread, NULL,
+                          clientWorker, (void *) cData );
+      if ( rc ) {
+         fprintf( stderr, "ERROR creating client thread : %d\n", rc );
          return 1;
       }
       
-      // Zero out the buffer to get ready to read from the socket.
-      bzero( buffer, MAX_BUF );
-      
-      // Read bytes from the client socket.
-      bytes = read ( clientDesc, buffer, MAX_BUF - 1 );
-      if ( bytes < 0 ) {
-         perror( "ERROR failed reading from socket descriptor " );
-      }
-      
-      printf( "Received message: %s\n", buffer );
-      
-      // Write message to the client.
-      msg = (char *)calloc( MAX_BUF, sizeof( msg ) );
-      strcpy( msg, "Received your message" );
-      bytes = write (clientDesc, msg, sizeof( msg ) - 1 );
-      if ( bytes < 0 ) {
-         perror( "ERROR: failed writing to socket " );
-         return 1;
-      }
-      free ( msg );
+      cData -> tid++;
    }
    
    // Close client and server socket descriptors.
