@@ -25,11 +25,11 @@ int connectToHost(const char * hostName, int port)
 
 
 // Hex 07 is end of application message
-char * readFromSocket(int sock, char * buffer &)
+char * readFromSocket(int sock, char * & buffer)
 {
    if (buffer == NULL)
    {
-      buffer = calloc(1024, sizeof(char));
+      buffer = (char *) calloc(1024, sizeof(char));
       if (buffer == NULL)
       {
          perror("Failed to allocate buffer space in readFromSocket");

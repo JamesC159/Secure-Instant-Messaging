@@ -13,4 +13,4 @@
 
 int connectToHost(const char *, int);
 
-int readFromSocket(int, char *);
+char * readFromSocket(int, char * &);
