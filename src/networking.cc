@@ -1,6 +1,13 @@
 #include <networking.h>
 #include <errno.h>
 
+/******************************************************************************
+ * FUNCTION:      
+ * DESCRIPTION:   
+ * PARAMETERS:    
+ * RETURN: 
+ * NOTES:        
+ *****************************************************************************/
 int connectToHost(const char * hostName, int port)
 {
    int cliSock = socket(AF_INET, SOCK_STREAM, 0);
@@ -9,7 +16,7 @@ int connectToHost(const char * hostName, int port)
    struct hostent * he;
    serverAddr.sin_family = AF_INET;
    serverAddr.sin_port = htons(port);
-   he = gethostbyname(hostName);
+   he = gethostbyname(hostName);      // This should probably be gethostbyaddr()
    if (he == NULL)
    {
       fprintf(stderr, "Failed to resolve hostname\n");
@@ -23,9 +30,14 @@ int connectToHost(const char * hostName, int port)
    }
    return cliSock;
 }
-
-
 // Hex 07 is end of application message
+/******************************************************************************
+ * FUNCTION:      
+ * DESCRIPTION:   
+ * PARAMETERS:    
+ * RETURN:
+ * NOTES:         
+ *****************************************************************************/
 char * readFromSocket(int sock, char * & buffer)
 {
    if (buffer == NULL)
@@ -40,8 +52,13 @@ char * readFromSocket(int sock, char * & buffer)
    
    return NULL;
 }
-
-// Socket Functions
+/******************************************************************************
+ * FUNCTION:      
+ * DESCRIPTION:   
+ * PARAMETERS:    
+ * RETURN:         
+ * NOTES:
+ *****************************************************************************/
 bool
 createSocket( int & sockDesc )
 {
@@ -58,7 +75,13 @@ createSocket( int & sockDesc )
    
    return true;
 }
-
+/******************************************************************************
+ * FUNCTION:      
+ * DESCRIPTION:   
+ * PARAMETERS:    
+ * RETURN:         
+ * NOTES:
+ *****************************************************************************/
 bool
 bindSocket( int & sockDesc,
             struct sockaddr_in & sockAddr )
@@ -74,7 +97,13 @@ bindSocket( int & sockDesc,
    
    return true;
 }
-
+/******************************************************************************
+ * FUNCTION:      
+ * DESCRIPTION:   
+ * PARAMETERS:    
+ * RETURN:         
+ * NOTES:
+ *****************************************************************************/
 bool
 listenSocket( int & sockDesc )
 {
@@ -86,10 +115,13 @@ listenSocket( int & sockDesc )
    
    return true;
 }
-
-/*
- * TODO - Authenticate the client before accepting the socket connection
- */
+/******************************************************************************
+ * FUNCTION:      
+ * DESCRIPTION:   
+ * PARAMETERS:    
+ * RETURN:         
+ * NOTES:
+ *****************************************************************************/
 bool
 acceptSocket( int & servDesc,
               int & cliDesc,
@@ -108,7 +140,13 @@ acceptSocket( int & servDesc,
    
    return true;
 }
-
+/******************************************************************************
+ * FUNCTION:      
+ * DESCRIPTION:   
+ * PARAMETERS:    
+ * RETURN:         
+ * NOTES:
+ *****************************************************************************/
 int
 validatePort( const char * portStr )
 {

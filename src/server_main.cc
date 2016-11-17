@@ -1,3 +1,10 @@
+/*
+ * Assumptions:   (1) The buddy list is already known in advance
+ *                (2) The username and passwords of clients are already known
+ *                    in advance.
+ * TODO:
+ */
+
 #include <networking.h>
 
 #include <stdlib.h>
@@ -17,97 +24,66 @@
 #include <string>
 
 /*
- * Global Constants
+ * Structures.
  */
-const int MAX_BUF = 8192;
-
-/*
- * Structures
- */
-struct clientData
+struct clientThreadData
 {
-   int tid;          // Thread ID
-   int clientDesc;   // Client socket descriptor
+   int tid;          // Thread ID.
+   int sockDesc;   // Client socket descriptor.
 };
 
-/*
- * Helper functions
- */
-void checkReadWrite( int bytes )
+struct clientDB
 {
-   // Reminder - stack buffer overflows. We need to do something about writing too
-   // much or reading too much
-   if ( bytes < 0 || bytes > MAX_BUF )
-   {
-      perror( "ERROR failed reading/writing to socket " );
-   }
-}
-
+   char * username;
+   char * pwHash;
+   int salt;
+};
 /*
- * Thread functions
+ * Helper functions.
  */
-void * clientWorker ( void * in )
-{
-
-   int bytes = 0;                // Bytes read/written
-   bool FIN = false;             // Flag form the client for closing the connection
-   char buffer [ MAX_BUF ];      // Buffer to store message received from the client
-   char msg [ MAX_BUF ];         // Message to send to the client
-   struct clientData * cData;    // client thread data structure
-   
-   cData = (struct clientData *)in;
-   printf( "Client thread %d starting\n", cData -> tid );
-   
-   while( ! FIN )
-   {
-      memset( buffer, '\0', sizeof( buffer ) );
-
-      // Read from client
-      bytes = read(  cData -> clientDesc,
-                     buffer,
-                     MAX_BUF - 1 );
-      checkReadWrite( bytes );
-
-      // Check if FIN signal was received
-      if ( strcmp( buffer, FIN_STR ) == 0 )
-      {
-         FIN = true;
-      }
-
-      printf( "Received message: %s\n", buffer );  // Note there are 2 '\n' characters here since
-                                                   // the buffer is being filled from client stdin
-      sprintf( msg, "Received your message %s", buffer );
-
-      // Write ACK to client
-      bytes = write( cData -> clientDesc,
-                     msg,
-                     sizeof( msg ) );
-
-      checkReadWrite( bytes );
-   }
-
-   printf( "Client thread %d exitting\n", cData -> tid );
-}
-
+void checkReadWrite( int );
+void processRequest( char * );
+void readFromClient( int &, char * );
+void writeToClient( int &, char * );
+bool authenticate ( struct clientThreadData ** );
 /*
- * Main function
- *
- * TODO - validate the port number given on the command line.
+ * Thread functions.
  */
+void * clientWorker ( void * );
+/*
+ * Global Constants.
+ */
+const char * FIN_STR = "FIN\n\0";   // These flags can be whatever we want
+                                    // them to be.
+const char * SYN_STR = "SYN\n\0";
+const char * RST_STR = "RST\n\0";
+const int MAX_BUF = 8192;
+/*
+ * Global Variables.
+ */
+struct clientDB db;
+int nonce;
+// Private RSA key
+// Public RSA key
+/******************************************************************************
+ *                            MAIN FUNCTION       
+ *****************************************************************************/
 int
 main ( int argc, char ** argv )
 {
 
-   pthread_t clientThread;          // Thread to spawn client workers
-   socklen_t clientLen = 0;         // Length of the client sockaddr_in structure
-   struct sockaddr_in serverAddr;   // Server socket address structure
-   struct sockaddr_in clientAddr;   // Client socket address structure
-   struct clientData * cData;       // Client worker thread data
-   int serverDesc = -1;             // Server socket descriptor
-   int clientDesc = -1;             // Client socket descriptor
-   int portNo = -1;                 // Port number server is binded to
-   int rc = 0;                      // pthread_create() return value
-   int tcount = 1;                  // Thread id counter for each client
+   pthread_t clientThread;          // Thread to spawn client workers.
+   socklen_t clientLen = 0;         // Length of the client sockaddr_in
+                                    //    structure.
+   struct sockaddr_in serverAddr;   // Server socket address structure.
+   struct sockaddr_in clientAddr;   // Client socket address structure.
+   struct clientThreadData * cData; // Client worker thread data.
+   struct buddy * buddylist;        // List of buddies stored on the server.
+   int serverDesc = -1;             // Server socket descriptor.
+   int clientDesc = -1;             // Client socket descriptor.
+   int portNo = -1;                 // Port number server is binded to.
+   int rc = 0;                      // pthread_create() return value.
+   int tcount = 1;                  // Thread id counter for each client.
    
    // Make sure the port number was provided in the command line arguments.
    if ( argc < 2 )
@@ -118,6 +94,7 @@ main ( int argc, char ** argv )
    
    // Validate and store the port number provided by the user.
    portNo = validatePort( argv[1] );
+
    if ( portNo == -1 )
    {
       if ( errno )
@@ -132,7 +109,7 @@ main ( int argc, char ** argv )
       return 1;
    }
    
-   // Create socket for server. Could handle failure here. For now, just terminating.
+   // Create socket for server.
    if ( ! createSocket( serverDesc ) )
    {
       perror( "ERROR creating server socket " );
@@ -155,7 +132,7 @@ main ( int argc, char ** argv )
       return 1;
    }
    
-   // Mark the server socket descriptor as a passive listener
+   // Mark the server socket descriptor as a passive listener.
    if ( ! listenSocket( serverDesc ) )
    {
       perror( "ERROR listening for socket connections " );
@@ -168,7 +145,7 @@ main ( int argc, char ** argv )
    while ( true )
    {
 
-      // Accept a client connection
+      // Accept a client connection.
       if ( ! acceptSocket( serverDesc,
                            clientDesc,
                            clientAddr,
@@ -178,11 +155,11 @@ main ( int argc, char ** argv )
          return 1;
       }
       
-      // Create a new clientData structure.
-      cData = new struct clientData;
-      cData -> clientDesc = clientDesc;
+      // Create a new clientThreadData structure.
+      cData = new struct clientThreadData;
+      cData -> sockDesc = clientDesc;
       cData -> tid = tcount;
-      
+
       // Spawn a worker thread for the connecting client.
       rc = pthread_create( &clientThread, 
                            NULL,
@@ -197,9 +174,182 @@ main ( int argc, char ** argv )
       tcount++;
    }
    
-   close( clientDesc );
    close( serverDesc );
 
    return 0;
    
-}  // End main()
+}
+/******************************************************************************
+ * FUNCTION:      checkReadWrite  
+ * DESCRIPTION:   Validates socket reads and writes
+ * PARAMETERS:    int bytes
+ *                   - number of bytes read or written to a socket descriptor.
+ * RETURN:        None  
+ * NOTES:      
+ *****************************************************************************/
+void 
+checkReadWrite( int bytes )
+{
+   // Reminder - stack buffer overflows. We need to do something about writing
+   // too much or reading too much.
+   if ( bytes < 0 || bytes > MAX_BUF )
+   {
+      perror( "ERROR failed reading/writing to socket " );
+   }
+}
+/******************************************************************************
+ * FUNCTION:      readFromClient  
+ * DESCRIPTION:   reads bytes written to socket descriptor from client
+ * PARAMETERS:    char ** buffer
+ *                   - message buffer
+ *                struct clientThreadData ** cData
+ *                   - structure containing client socket/thread info
+ * RETURN:        None
+ * NOTES:      
+ *****************************************************************************/
+void
+readFromClient( int & socket, 
+                  char * buffer )
+{
+   int bytes = 0;
+
+   bytes = read( socket,
+                  buffer,
+                  MAX_BUF );
+   checkReadWrite( bytes );
+
+}
+/******************************************************************************
+ * FUNCTION:      readFromClient  
+ * DESCRIPTION:   reads bytes written to socket descriptor from client
+ * PARAMETERS:    char ** buffer
+ *                   - message buffer
+ *                struct clientThreadData ** cData
+ *                   - structure containing client socket/thread info
+ * RETURN:        None
+ * NOTES:      
+ *****************************************************************************/
+void
+writeToClient( int & socket, 
+                  char * msg )
+{
+   int bytes = 0;
+
+   bytes = write( socket,
+                  msg,
+                  MAX_BUF );
+   checkReadWrite( bytes );
+
+}
+/******************************************************************************
+ * FUNCTION:      clientWorker    
+ * DESCRIPTION:   Thread worker function for accepted client socket 
+ *                connections.
+ * PARAMETERS:    void * in - clientThreadData structure
+ * RETURN:        None
+ * NOTES:
+ *****************************************************************************/
+void * 
+clientWorker ( void * in )
+{
+
+   int bytes = 0;                // Bytes read/written.
+   bool FIN = false;             // Flag from the client for closing the
+                                 //    connection.
+   bool authenticated  = false;  // Flag for client authentication recognition.
+   char buffer [ MAX_BUF ];      // Buffer to store message received from the
+                                 //    client.
+   char msg [ MAX_BUF ];         // Message to send to the client.
+   char * action;                // Action to take after processing the client
+                                 //    client request.
+   struct clientThreadData * cData;    // Client thread data structure.
+   
+   cData = (struct clientThreadData *)in;
+   printf( "Client thread %d starting\n", cData -> tid );
+
+   memset( buffer, '\0', sizeof( buffer ) );
+
+      // Read from client.
+   readFromClient( cData -> sockDesc, buffer );
+
+      // First we must authenticate the client. This involves establishing the
+      // session key between the client and the server.
+   if( ! authenticated )
+   {
+      authenticate( &cData );
+      authenticated = true;
+   }
+   
+   while( ! FIN )
+   {
+      memset( buffer, '\0', sizeof( buffer ) );
+
+      // Read from client.
+      readFromClient( cData -> sockDesc, buffer );
+
+      // Process Request.
+      processRequest( buffer );
+
+      if ( strcmp( buffer, FIN_STR ) == 0 )
+      {
+         FIN = true;
+      }
+
+      printf( "Received message: %s\n", buffer );  // Note there are 2 '\n'
+                                                   // characters here since
+                                                   // the buffer is being
+                                                   // filled from client stdin.
+      sprintf( msg, "Received your message %s", buffer );
+
+      // Write ACK to client.
+      writeToClient( cData -> sockDesc,
+                     msg );
+   }
+
+   printf( "Client thread %d exitting\n", cData -> tid );
+   close( cData -> sockDesc );
+}
+/******************************************************************************
+ * FUNCTION:      processRequest  
+ * DESCRIPTION:   Determine client requests to server.
+ * PARAMETERS:    char * request 
+ *                   - The client request to the server
+ * RETURN:        None
+ * NOTES:
+ *****************************************************************************/
+void 
+processRequest( char * request )
+{
+   // Check if client session request.
+   //    Agree on session key for client-client comm.
+   //    Get ticket to the requested client and send it.
+   // Check if buddy list request.
+   // Check if client wants to close the connection.
+
+}
+/******************************************************************************
+ * FUNCTION:      authenticate   
+ * DESCRIPTION:   Authenticates and establishes Diffie-Hellman session key
+ *                between a client and the server.   
+ * PARAMETERS:    struct clientThreadData ** cData 
+ *                   - socket descriptor and thread id for the client.
+ * RETURN:        true if client successfully authenticated.
+ *                false if client authentication was a failure.
+ * NOTES:       
+ *****************************************************************************/
+bool
+authenticate( struct clientThreadData ** cData )
+{
+   int bytes = 0;
+   char buffer [ MAX_BUF ];
+   // Read client username.
+   readFromClient( (*cData) -> sockDesc,
+                     buffer );
+   // Generate random nonce and salt.
+   // Write random nonce and salt to client.
+   // Read username, hash(password, salt), nonce from client.
+   // Check information against clientDB.
+   // Generate Diffie-Hellman number.
+   // Read client Diffie-Hellman number.
+   // Calculate Ksa = Diffie-Hellman key.
+}

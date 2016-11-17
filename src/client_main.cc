@@ -1,6 +1,13 @@
 #include <networking.h>
 #include <errno.h>
 
+const char * FIN_STR = "FIN\n\0";   // These flags can be whatever we want them to be.
+const char * SYN_STR = "SYN\n\0";
+const char * RST_STR = "RST\n\0";
+
+/******************************************************************************
+ *                         MAIN FUNCTION
+ *****************************************************************************/
 int main(int argc, char ** argv ) {
    
    int portno = -1;
@@ -58,6 +65,14 @@ int main(int argc, char ** argv ) {
       return -1;
    }
 
+   // login - agree on session key with server
+   // get buddy list from server
+   // wait on user for request to comm with another client
+   // mutual authentication between requested client
+   // derive encryption/authentication keys from session key
+   // let user talk (and display messages from other user)
+   // disconnect
+
    while( ! FIN )
    {
       char * buf = (char *)malloc( 8192*sizeof( char ) );
@@ -87,11 +102,4 @@ int main(int argc, char ** argv ) {
    }
 
    close(cliSock);
-
-   // login
-   // get buddy list
-   // wait on user for request
-   // connect to other client
-   // let user talk (and display messages from other user)
-   // disconnect
 }
