@@ -29,6 +29,9 @@ using std::endl;
 #include <string>
 using std::string;
 
+#include "cryptlib.h"
+using CryptoPP::Exception;
+
 #include "cryptopp/rsa.h"
 using CryptoPP::RSA;
 using CryptoPP::RSASS;
@@ -38,17 +41,20 @@ using CryptoPP::InvertibleRSAFunction;
 using CryptoPP::PSS;
 
 #include "cryptopp/sha.h"
-using CryptoPP::SHA1;
+using CryptoPP::SHA256;
 
 #include "cryptopp/files.h"
 using CryptoPP::FileSink;
 using CryptoPP::FileSource;
 
 #include "cryptopp/filters.h"
+using CryptoPP::ArraySink;
+using CryptoPP::StringSource;
+using CryptoPP::StringSink;
+using CryptoPP::StringStore;
+using CryptoPP::Redirector;
 using CryptoPP::SignerFilter;
 using CryptoPP::SignatureVerificationFilter;
-using CryptoPP::StringSink;
-using CryptoPP::StringSource;
 
 #include "cryptopp/integer.h"
 using CryptoPP::Integer;
@@ -65,7 +71,14 @@ using CryptoPP::SecByteBlock;
 struct clientThreadData
 {
    int tid;          // Thread ID.
-   int sockDesc;   // Client socket descriptor.
+   int sockDesc;   	// Client socket descriptor.
+	string signature;
+	StringSink * sig;
+	AutoSeededRandomPool rng;
+   RSA::PrivateKey privateKey;
+   RSA::PublicKey publicKey;
+	RSASS<PSS, SHA256>::Signer signer;
+	RSASS<PSS, SHA256>::Verifier verifier;
 };
 
 struct clientDB
@@ -80,14 +93,15 @@ struct clientDB
  */
 void checkReadWrite( int );
 void processRequest( char * );
-void readFromClient( int &, char * );
-void writeToClient( int &, char * );
+void readFromClient( int &, string );
+void writeToClient( int &, string );
 bool authenticate ( struct clientThreadData ** );
 
 /*
  * Thread functions.
  */
 void * clientWorker ( void * );
+
 /*
  * Globals.
  */
@@ -187,11 +201,11 @@ main ( int argc, char ** argv )
 
 		///////////////////////////////////////
 		// Generated Parameters
-		const Integer& n = params.GetModulus();
-		const Integer& p = params.GetPrime1();
-		const Integer& q = params.GetPrime2();
-		const Integer& d = params.GetPrivateExponent();
-		const Integer& e = params.GetPublicExponent();
+		const Integer & n = params.GetModulus();
+		const Integer & p = params.GetPrime1();
+		const Integer & q = params.GetPrime2();
+		const Integer & d = params.GetPrivateExponent();
+		const Integer & e = params.GetPublicExponent();
 
 		///////////////////////////////////////
 		// Dump
@@ -203,73 +217,79 @@ main ( int argc, char ** argv )
 		cout << " e: " << e << endl;
 		cout << endl;
 
-       RSA::PrivateKey privateKey( params );
-       RSA::PublicKey publicKey( params );
+      RSA::PrivateKey privateKey( params );
+      RSA::PublicKey publicKey( params );
 
-       // Message
-       string message = "Yoda said, Do or Do Not. There is not try.";
-       string signature;
+      // Message
+      string message = "Yoda said, Do or Do Not. There is not try.";
+		string signature, recovered; 
 
        ////////////////////////////////////////////////
        // Sign and Encode
-       RSASS<PSS, SHA1>::Signer signer( privateKey );
+       RSASS<PSS, SHA256>::Signer signer( privateKey );
 
-       StringSource( message, true, 
-           new SignerFilter( rng, signer,
-               new StringSink( signature )
-           )
-       );
+		 StringSource ss1(message, true, 
+		     new SignerFilter(rng, signer,
+		         new StringSink(signature),
+		         true // putMessage for recovery
+		    ) // SignerFilter
+		 ); // StringSource
 
        ////////////////////////////////////////////////
        // Verify and Recover
-       RSASS<PSS, SHA1>::Verifier verifier( publicKey );
+       RSASS<PSS, SHA256>::Verifier verifier( publicKey );
 
-       StringSource( message+signature, true,
-           new SignatureVerificationFilter(
-               verifier, NULL,
-               SignatureVerificationFilter::THROW_EXCEPTION
-           )
-       );
+		 StringSource ss2(signature, true,
+		     new SignatureVerificationFilter(
+		         verifier,
+		         new StringSink(recovered),
+		         CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION | CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION
+		    ) // SignatureVerificationFilter
+		 ); // StringSource
 
        cout << "Verified signature on message" << endl;
+		 
+	    // Start client listen-accept phase.
+	    while ( true )
+	    {
 
+	       // Accept a client connection.
+	       if ( ! acceptSocket( serverDesc,
+	                            clientDesc,
+	                            clientAddr,
+	                            clientLen ) )
+	       {
+	          perror( "ERROR failed to accept socket connection " );
+	          return 1;
+	       }
+      
+	       // Create a new clientThreadData structure.
+	       cData = new struct clientThreadData;
+	       cData -> sockDesc = clientDesc;
+	       cData -> tid = tcount;
+			 cData -> privateKey = privateKey;
+			 cData -> publicKey = publicKey;
+			 cData -> signer = signer;
+			 cData -> verifier = verifier;
+			 cData -> signature = signature;
+
+	       // Spawn a worker thread for the connecting client.
+	       rc = pthread_create( &clientThread, 
+	                            NULL,
+	                            clientWorker, 
+	                            (void *) cData );
+	       if ( rc )
+	       {
+	          fprintf( stderr, "ERROR creating client thread : %d\n", rc );
+	          return 1;
+	       }
+      
+	       tcount++;
+	    }
    }
    catch( CryptoPP::Exception& e ) 
 	{
        std::cerr << "Error: " << e.what() << std::endl;
-   }
-   
-   // Start client listen-accept phase.
-   while ( true )
-   {
-
-      // Accept a client connection.
-      if ( ! acceptSocket( serverDesc,
-                           clientDesc,
-                           clientAddr,
-                           clientLen ) )
-      {
-         perror( "ERROR failed to accept socket connection " );
-         return 1;
-      }
-      
-      // Create a new clientThreadData structure.
-      cData = new struct clientThreadData;
-      cData -> sockDesc = clientDesc;
-      cData -> tid = tcount;
-
-      // Spawn a worker thread for the connecting client.
-      rc = pthread_create( &clientThread, 
-                           NULL,
-                           clientWorker, 
-                           (void *) cData );
-      if ( rc )
-      {
-         fprintf( stderr, "ERROR creating client thread : %d\n", rc );
-         return 1;
-      }
-      
-      tcount++;
    }
    
    close( serverDesc );
@@ -277,6 +297,7 @@ main ( int argc, char ** argv )
    return 0;
    
 }
+
 /******************************************************************************
  * FUNCTION:      checkReadWrite  
  * DESCRIPTION:   Validates socket reads and writes
@@ -295,6 +316,7 @@ checkReadWrite( int bytes )
       perror( "ERROR failed reading/writing to socket " );
    }
 }
+
 /******************************************************************************
  * FUNCTION:      readFromClient  
  * DESCRIPTION:   reads bytes written to socket descriptor from client
@@ -307,16 +329,17 @@ checkReadWrite( int bytes )
  *****************************************************************************/
 void
 readFromClient( int & socket, 
-                  char * buffer )
+                  string buffer )
 {
    int bytes = 0;
 
    bytes = read( socket,
-                  buffer,
+                  (char*)buffer.c_str(),
                   MAX_BUF );
    checkReadWrite( bytes );
 
 }
+
 /******************************************************************************
  * FUNCTION:      readFromClient  
  * DESCRIPTION:   reads bytes written to socket descriptor from client
@@ -329,16 +352,17 @@ readFromClient( int & socket,
  *****************************************************************************/
 void
 writeToClient( int & socket, 
-                  char * msg )
+                  string msg )
 {
    int bytes = 0;
 
    bytes = write( socket,
-                  msg,
+                  (char*)msg.c_str(),
                   MAX_BUF );
    checkReadWrite( bytes );
 
 }
+
 /******************************************************************************
  * FUNCTION:      clientWorker    
  * DESCRIPTION:   Thread worker function for accepted client socket 
@@ -367,11 +391,8 @@ clientWorker ( void * in )
 
    memset( buffer, '\0', sizeof( buffer ) );
 
-      // Read from client.
-   readFromClient( cData -> sockDesc, buffer );
-
-      // First we must authenticate the client. This involves establishing the
-      // session key between the client and the server.
+   // First we must authenticate the client. This involves establishing the
+   // session key between the client and the server.
    if( ! authenticated )
    {
       authenticate( &cData );
@@ -382,10 +403,7 @@ clientWorker ( void * in )
    {
       memset( buffer, '\0', sizeof( buffer ) );
 
-      // Read from client.
       readFromClient( cData -> sockDesc, buffer );
-
-      // Process Request.
       processRequest( buffer );
 
       if ( strcmp( buffer, FIN_STR ) == 0 )
@@ -399,7 +417,6 @@ clientWorker ( void * in )
                                                    // filled from client stdin.
       sprintf( msg, "Received your message %s", buffer );
 
-      // Write ACK to client.
       writeToClient( cData -> sockDesc,
                      msg );
    }
@@ -407,6 +424,7 @@ clientWorker ( void * in )
    printf( "Client thread %d exitting\n", cData -> tid );
    close( cData -> sockDesc );
 }
+
 /******************************************************************************
  * FUNCTION:      processRequest  
  * DESCRIPTION:   Determine client requests to server.
@@ -425,6 +443,7 @@ processRequest( char * request )
    // Check if client wants to close the connection.
 
 }
+
 /******************************************************************************
  * FUNCTION:      authenticate   
  * DESCRIPTION:   Authenticates and establishes Diffie-Hellman session key
@@ -439,15 +458,66 @@ bool
 authenticate( struct clientThreadData ** cData )
 {
    int bytes = 0;
-   char buffer [ MAX_BUF ];
-   // Read client username.
-   readFromClient( (*cData) -> sockDesc,
-                     buffer );
-   // Generate random nonce and salt.
-   // Write random nonce and salt to client.
-   // Read username, hash(password, salt), nonce from client.
-   // Check information against clientDB.
-   // Generate Diffie-Hellman number.
-   // Read client Diffie-Hellman number.
-   // Calculate Ksa = Diffie-Hellman key.
+   string buffer;
+	string signature;
+	
+	// Scratch Area
+	const unsigned int BLOCKSIZE = 16 * 8;
+	byte pcbScratch[ BLOCKSIZE ];
+
+	try
+	{
+		
+		// Construction
+		AutoSeededRandomPool rng;
+		AutoSeededRandomPool nonce;
+		AutoSeededRandomPool salt;
+		
+		// Random Block
+		nonce.GenerateBlock( pcbScratch, BLOCKSIZE );
+		salt.GenerateBlock( pcbScratch, BLOCKSIZE );
+	
+	   // Read client username.
+	   readFromClient( (*cData) -> sockDesc, buffer );
+		
+      RSASS<PSS, SHA256>::Signer verifier( (*cData) -> publicKey );
+      StringSource( buffer+signature, true,
+          new SignatureVerificationFilter(
+              (*cData) -> verifier, NULL,
+              SignatureVerificationFilter::THROW_EXCEPTION
+          )
+      );
+
+	   cout << "Verified signature on message" << endl;
+		
+		// Decrypt message
+		// Check client DB to see if username exists
+		
+		// Write random nonce and salt to client.
+		string msg = "Received your message";
+		
+		// Sign the message
+		StringSource( msg, true, 
+							new SignerFilter( rng,
+								(*cData) -> signer,
+								(*cData) -> sig ) );
+		
+		writeToClient( (*cData) -> sockDesc, msg );
+	   
+	   // Read username, hash(password, salt), nonce from client.
+	   // Check information against clientDB.
+	   // Generate Diffie-Hellman number.
+	   // Read client Diffie-Hellman number.
+	   // Calculate Ksa = Diffie-Hellman key.
+	}
+   catch( SignatureVerificationFilter::SignatureVerificationFailed& e )
+   {
+       cerr << "caught SignatureVerificationFailed..." << endl;
+       cerr << e.what() << endl;
+   }
+   catch( CryptoPP::Exception& e )
+   {
+       cerr << "caught Exception..." << endl;
+       cerr << e.what() << endl;
+   }
 }
