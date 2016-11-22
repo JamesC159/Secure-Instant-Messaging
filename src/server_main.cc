@@ -21,7 +21,40 @@
 #include <semaphore.h>
 
 #include <iostream>
+using std::cout;
+using std::cin;
+using std::cerr;
+using std::endl;
+
 #include <string>
+using std::string;
+
+#include "cryptopp/rsa.h"
+using CryptoPP::RSA;
+using CryptoPP::RSASS;
+using CryptoPP::InvertibleRSAFunction;
+
+#include "cryptopp/pssr.h"
+using CryptoPP::PSS;
+
+#include "cryptopp/sha.h"
+using CryptoPP::SHA1;
+
+#include "cryptopp/files.h"
+using CryptoPP::FileSink;
+using CryptoPP::FileSource;
+
+#include "cryptopp/filters.h"
+using CryptoPP::SignerFilter;
+using CryptoPP::SignatureVerificationFilter;
+using CryptoPP::StringSink;
+using CryptoPP::StringSource;
+
+#include "cryptopp/osrng.h"
+using CryptoPP::AutoSeededRandomPool;
+
+#include "cryptopp/SecBlock.h"
+using CryptoPP::SecByteBlock;
 
 /*
  * Structures.
@@ -38,6 +71,7 @@ struct clientDB
    char * pwHash;
    int salt;
 };
+
 /*
  * Helper functions.
  */
@@ -46,25 +80,21 @@ void processRequest( char * );
 void readFromClient( int &, char * );
 void writeToClient( int &, char * );
 bool authenticate ( struct clientThreadData ** );
+
 /*
  * Thread functions.
  */
 void * clientWorker ( void * );
 /*
- * Global Constants.
+ * Globals.
  */
 const char * FIN_STR = "FIN\n\0";   // These flags can be whatever we want
                                     // them to be.
 const char * SYN_STR = "SYN\n\0";
 const char * RST_STR = "RST\n\0";
 const int MAX_BUF = 8192;
-/*
- * Global Variables.
- */
 struct clientDB db;
-int nonce;
-// Private RSA key
-// Public RSA key
+
 /******************************************************************************
  *                            MAIN FUNCTION       
  *****************************************************************************/
@@ -140,6 +170,52 @@ main ( int argc, char ** argv )
    }
    
    clientLen = sizeof( clientAddr );
+	
+   try
+   {
+       ////////////////////////////////////////////////
+       // Generate keys
+       AutoSeededRandomPool rng;
+
+       InvertibleRSAFunction parameters;
+       parameters.GenerateRandomWithKeySize( rng, 1024 );
+
+       RSA::PrivateKey privateKey( parameters );
+       RSA::PublicKey publicKey( parameters );
+
+       // Message
+       string message = "Yoda said, Do or Do Not. There is not try.";
+       string signature;
+
+       ////////////////////////////////////////////////
+       // Sign and Encode
+       RSASS<PSS, SHA1>::Signer signer( privateKey );
+
+       StringSource( message, true, 
+           new SignerFilter( rng, signer,
+               new StringSink( signature )
+           ) // SignerFilter
+       ); // StringSource
+
+       ////////////////////////////////////////////////
+       // Verify and Recover
+       RSASS<PSS, SHA1>::Verifier verifier( publicKey );
+
+       StringSource( message+signature, true,
+           new SignatureVerificationFilter(
+               verifier, NULL,
+               SignatureVerificationFilter::THROW_EXCEPTION
+           ) // SignatureVerificationFilter
+       ); // StringSource
+
+       cout << "Verified signature on message" << endl;
+
+   } // try
+
+   catch( CryptoPP::Exception& e ) 
+	{
+       std::cerr << "Error: " << e.what() << std::endl;
+   }
    
    // Start client listen-accept phase.
    while ( true )

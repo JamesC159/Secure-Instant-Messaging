@@ -13,8 +13,8 @@ CLIENT_OBJS = $(addprefix ${CLIENT_ODIR}, networking.o client_main.o)
 CFLAGS = -Wall -g
 LDFLAGS=
 CC = g++
-INCLUDES = -I ${IDIR}
-LIBS = -lpthread
+INCLUDES = -I${IDIR} -I/usr/local/include/cryptopp
+LIBS = -lpthread -lcryptopp
 
 SERVER_DRIVER = server
 CLIENT_DRIVER = client
