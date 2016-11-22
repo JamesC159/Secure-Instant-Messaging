@@ -1,0 +1,47 @@
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\contentsline {section}{\numberline {1}INTRODUCTION}{1}{section.1}
+\contentsline {subsection}{\numberline {1.1}DOCUMENT OVERVIEW}{1}{subsection.1.1}
+\contentsline {subsection}{\numberline {1.2}ASSUMPTIONS}{1}{subsection.1.2}
+\contentsline {section}{\numberline {2}SYSTEM AND SOFTWARE ARCHITECTURE}{1}{section.2}
+\contentsline {subsection}{\numberline {2.1}CLIENT}{2}{subsection.2.1}
+\contentsline {subsection}{\numberline {2.2}SERVER}{2}{subsection.2.2}
+\contentsline {subsection}{\numberline {2.3}LOGIN INTERFACE}{2}{subsection.2.3}
+\contentsline {subsection}{\numberline {2.4}SESSION INTERFACE}{2}{subsection.2.4}
+\contentsline {subsection}{\numberline {2.5}BUDDY LIST}{2}{subsection.2.5}
+\contentsline {subsection}{\numberline {2.6}CLIENT ACCOUNT DATABASE}{2}{subsection.2.6}
+\contentsline {section}{\numberline {3}THREAT MODEL}{3}{section.3}
+\contentsline {subsection}{\numberline {3.1}ASSETS}{3}{subsection.3.1}
+\contentsline {subsection}{\numberline {3.2}ATTACKS CONSIDERED}{3}{subsection.3.2}
+\contentsline {subsection}{\numberline {3.3}SECURITY FEATURES}{3}{subsection.3.3}
+\contentsline {section}{\numberline {4}PROTOCOL DESIGN}{3}{section.4}
+\contentsline {subsection}{\numberline {4.1}ENTITIES}{4}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}ITEMS}{4}{subsection.4.2}
+\contentsline {subsection}{\numberline {4.3}CLIENT-SERVER / LOGGING IN}{4}{subsection.4.3}
+\contentsline {subsection}{\numberline {4.4}RETREIVING BUDDY LISTS}{5}{subsection.4.4}
+\contentsline {subsection}{\numberline {4.5}CLIENT-CLIENT SESSION ESTABLISHMENT}{5}{subsection.4.5}
+\contentsline {subsection}{\numberline {4.6}MUTUAL AUTHENTICATION}{5}{subsection.4.6}
+\contentsline {subsection}{\numberline {4.7}DERIVING ENCRYPTION/AUTHENTICATION KEYS}{5}{subsection.4.7}
