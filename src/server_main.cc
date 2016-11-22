@@ -21,7 +21,6 @@
 #include <semaphore.h>
 
 #include <iostream>
-<<<<<<< HEAD
 using std::cout;
 using std::cin;
 using std::cerr;
@@ -67,22 +66,10 @@ using CryptoPP::AutoSeededRandomPool;
 #include "cryptopp/SecBlock.h"
 using CryptoPP::SecByteBlock;
 
-
-struct clientThreadData
-{
-   int tid;          // Thread ID.
-   int sockDesc;   	// Client socket descriptor.
-=======
-#include <string>
-
-/*
- * Structures.
- */
 struct clientThreadData
 {
    int tid;          // Thread ID.
    int sockDesc;   // Client socket descriptor.
->>>>>>> 53531ab26274085e55374219e445718885ea7078
 };
 
 struct clientDB
@@ -91,10 +78,7 @@ struct clientDB
    char * pwHash;
    int salt;
 };
-<<<<<<< HEAD
 
-=======
->>>>>>> 53531ab26274085e55374219e445718885ea7078
 /*
  * Helper functions.
  */
@@ -103,57 +87,33 @@ void processRequest( char * );
 void readFromClient( int &, char * );
 void writeToClient( int &, char * );
 bool authenticate ( struct clientThreadData ** );
-<<<<<<< HEAD
 
-=======
->>>>>>> 53531ab26274085e55374219e445718885ea7078
 /*
  * Thread functions.
  */
 void * clientWorker ( void * );
-<<<<<<< HEAD
 
-/*
- * Global Variables and Constants
-=======
-/*
- * Global Constants.
->>>>>>> 53531ab26274085e55374219e445718885ea7078
- */
+
 const char * FIN_STR = "FIN\n\0";   // These flags can be whatever we want
                                     // them to be.
 const char * SYN_STR = "SYN\n\0";
 const char * RST_STR = "RST\n\0";
 const int MAX_BUF = 8192;
-<<<<<<< HEAD
 struct clientDB db;
 
-=======
-/*
- * Global Variables.
- */
-struct clientDB db;
-int nonce;
-// Private RSA key
-// Public RSA key
->>>>>>> 53531ab26274085e55374219e445718885ea7078
 /******************************************************************************
  *                            MAIN FUNCTION       
  *****************************************************************************/
 int
 main ( int argc, char ** argv )
 {
-<<<<<<< HEAD
-	
+
 	unsigned int dhBits = 1024;
 	unsigned int rsaBits = 2048;
 	unsigned long elapsed = 0;
 	unsigned long ticks = 0;
 	unsigned long seconds = 0;
 	
-=======
-
->>>>>>> 53531ab26274085e55374219e445718885ea7078
    pthread_t clientThread;          // Thread to spawn client workers.
    socklen_t clientLen = 0;         // Length of the client sockaddr_in
                                     //    structure.
@@ -222,7 +182,6 @@ main ( int argc, char ** argv )
    }
    
    clientLen = sizeof( clientAddr );
-<<<<<<< HEAD
 	
 	// Generate server public/private RSA key pair
    try
@@ -258,8 +217,6 @@ main ( int argc, char ** argv )
 	 {
         cerr << "Error: " << e.what() << endl;
     }
-=======
->>>>>>> 53531ab26274085e55374219e445718885ea7078
    
    // Start client listen-accept phase.
    while ( true )
@@ -389,16 +346,6 @@ clientWorker ( void * in )
 
    memset( buffer, '\0', sizeof( buffer ) );
 
-<<<<<<< HEAD
-   // First we must authenticate the client. This involves establishing the
-   // session key between the client and the server.
-=======
-      // Read from client.
-   readFromClient( cData -> sockDesc, buffer );
-
-      // First we must authenticate the client. This involves establishing the
-      // session key between the client and the server.
->>>>>>> 53531ab26274085e55374219e445718885ea7078
    if( ! authenticated )
    {
       authenticate( &cData );
@@ -408,11 +355,7 @@ clientWorker ( void * in )
    while( ! FIN )
    {
       memset( buffer, '\0', sizeof( buffer ) );
-
-      // Read from client.
       readFromClient( cData -> sockDesc, buffer );
-
-      // Process Request.
       processRequest( buffer );
 
       if ( strcmp( buffer, FIN_STR ) == 0 )
@@ -425,8 +368,6 @@ clientWorker ( void * in )
                                                    // the buffer is being
                                                    // filled from client stdin.
       sprintf( msg, "Received your message %s", buffer );
-
-      // Write ACK to client.
       writeToClient( cData -> sockDesc,
                      msg );
    }
@@ -470,11 +411,6 @@ authenticate( struct clientThreadData ** cData )
    // Read client username.
    readFromClient( (*cData) -> sockDesc,
                      buffer );
-   // Generate random nonce and salt.
-<<<<<<< HEAD
-	
-=======
->>>>>>> 53531ab26274085e55374219e445718885ea7078
    // Write random nonce and salt to client.
    // Read username, hash(password, salt), nonce from client.
    // Check information against clientDB.

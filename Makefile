@@ -13,32 +13,19 @@ CLIENT_OBJS = $(addprefix ${CLIENT_ODIR}, networking.o client_main.o)
 CFLAGS = -Wall -g
 LDFLAGS=
 CC = g++
-<<<<<<< HEAD
 INCLUDES = -I${IDIR} -I/usr/include/cryptopp
 LIBS = -lpthread -lcryptopp
-=======
-INCLUDES = -I ${IDIR}
-LIBS = -lpthread
->>>>>>> 53531ab26274085e55374219e445718885ea7078
 
 SERVER_DRIVER = server
 CLIENT_DRIVER = client
 
 ${SERVER_ODIR}%.o: ${SDIR}%.cc
 	@echo "Compiling server object file..."
-<<<<<<< HEAD
 	${CC} ${CFLAGS} ${INCLUDES} -c $< -o $@ ${LIBS}
 
 ${CLIENT_ODIR}%.o: ${SDIR}%.cc
 	@echo "Compiling client object file..."
 	${CC} ${CFLAGS} ${INCLUDES} -c $< -o $@ ${LIBS}
-=======
-	${CC} ${CFLAGS} ${INCLUDES} -c $< -o $@
-
-${CLIENT_ODIR}%.o: ${SDIR}%.cc
-	@echo "Compiling client object file..."
-	${CC} ${CFLAGS} ${INCLUDES} -c $< -o $@
->>>>>>> 53531ab26274085e55374219e445718885ea7078
 
 all: ${SERVER_DRIVER} ${CLIENT_DRIVER}
 

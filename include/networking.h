@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <netdb.h>
 
-<<<<<<< HEAD
 #include <errno.h>
 
 /*#include "rsa.h"
@@ -25,8 +24,6 @@ using CryptoPP::AutoSeededRandomPool;
 using CryptoPP::TimerBase;
 using CryptoPP::ThreadUserTimer;*/
 
-=======
->>>>>>> 53531ab26274085e55374219e445718885ea7078
 const int MAX_CONN = 25;   			// Maximum number of socket connection the server will
                            			// 	backlog.
 
