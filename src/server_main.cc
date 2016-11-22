@@ -50,6 +50,9 @@ using CryptoPP::SignatureVerificationFilter;
 using CryptoPP::StringSink;
 using CryptoPP::StringSource;
 
+#include "cryptopp/integer.h"
+using CryptoPP::Integer;
+
 #include "cryptopp/osrng.h"
 using CryptoPP::AutoSeededRandomPool;
 
@@ -173,15 +176,35 @@ main ( int argc, char ** argv )
 	
    try
    {
-       ////////////////////////////////////////////////
-       // Generate keys
-       AutoSeededRandomPool rng;
+		///////////////////////////////////////
+		// Pseudo Random Number Generator
+		AutoSeededRandomPool rng;
 
-       InvertibleRSAFunction parameters;
-       parameters.GenerateRandomWithKeySize( rng, 1024 );
+		///////////////////////////////////////
+		// Generate Parameters
+		InvertibleRSAFunction params;
+		params.GenerateRandomWithKeySize(rng, 3072);
 
-       RSA::PrivateKey privateKey( parameters );
-       RSA::PublicKey publicKey( parameters );
+		///////////////////////////////////////
+		// Generated Parameters
+		const Integer& n = params.GetModulus();
+		const Integer& p = params.GetPrime1();
+		const Integer& q = params.GetPrime2();
+		const Integer& d = params.GetPrivateExponent();
+		const Integer& e = params.GetPublicExponent();
+
+		///////////////////////////////////////
+		// Dump
+		cout << "RSA Parameters:" << endl;
+		cout << " n: " << n << endl;
+		cout << " p: " << p << endl;
+		cout << " q: " << q << endl;
+		cout << " d: " << d << endl;
+		cout << " e: " << e << endl;
+		cout << endl;
+
+       RSA::PrivateKey privateKey( params );
+       RSA::PublicKey publicKey( params );
 
        // Message
        string message = "Yoda said, Do or Do Not. There is not try.";
@@ -194,8 +217,8 @@ main ( int argc, char ** argv )
        StringSource( message, true, 
            new SignerFilter( rng, signer,
                new StringSink( signature )
-           ) // SignerFilter
-       ); // StringSource
+           )
+       );
 
        ////////////////////////////////////////////////
        // Verify and Recover
@@ -205,13 +228,12 @@ main ( int argc, char ** argv )
            new SignatureVerificationFilter(
                verifier, NULL,
                SignatureVerificationFilter::THROW_EXCEPTION
-           ) // SignatureVerificationFilter
-       ); // StringSource
+           )
+       );
 
        cout << "Verified signature on message" << endl;
 
-   } // try
-
+   }
    catch( CryptoPP::Exception& e ) 
 	{
        std::cerr << "Error: " << e.what() << std::endl;
