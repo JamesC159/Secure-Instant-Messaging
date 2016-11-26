@@ -6,6 +6,7 @@
  */
 
 #include "clienthelp.h"
+#include <sys/socket.h>
 
 string
 recoverMsg(RSA::PublicKey serverKey, Socket& sockServer)
@@ -21,30 +22,32 @@ recoverMsg(RSA::PublicKey serverKey, Socket& sockServer)
     {
       // Retrieve message from socket
       cout << "Waiting for reply from server..." << endl;
-          sockServer.Receive(byteBuf, sizeof(byteBuf));
-          cout << endl << "Cipher Received: " << byteBuf << endl;
+      sockServer.Receive(byteBuf, sizeof(byteBuf));
+      cout << endl << "Cipher Received: " << byteBuf << endl;
 
-          // Convert message to a string
-          ss << byteBuf;
-          recBuf = ss.str();
-          ss.str(string());
+      // Convert message to a string
+      ss << byteBuf;
+      recBuf = ss.str();
+      ss.str(string());
 
-          //Convert the string to an Integer so we can calculate the inverse
-          c = Integer(recBuf.c_str());
-          r = serverKey.ApplyFunction(c);
-          cout << "r: " << r << endl;
+      //Convert the string to an Integer so we can calculate the inverse
+      c = Integer(recBuf.c_str());
+      r = serverKey.ApplyFunction(c);
+      cout << "r: " << r << endl;
 
-          // Recover the original message
-          size_t req = r.MinEncodedSize();
-          recovered.resize(req);
-          r.Encode((byte *) recovered.data(), recovered.size());
-          cout << "Recovered: " << recovered << endl;
+      // Recover the original message
+      size_t req = r.MinEncodedSize();
+      recovered.resize(req);
+      r.Encode((byte *) recovered.data(), recovered.size());
+      cout << "Recovered: " << recovered << endl;
 
     }
   catch (Exception& e)
     {
       cerr << "caught Exception..." << endl;
       cerr << e.what() << endl;
+      sockServer.ShutDown(SHUT_RDWR);
+      return "";
     }
 
   return recovered;
@@ -71,12 +74,13 @@ sendMsg(RSA::PublicKey serverKey, Socket& sockServer, string sendBuf)
       ss.str(string());
       cout << "Cipher Sent: " << sendBuf << endl;
 
-          sockServer.Send((const byte *) sendBuf.c_str(), sendBuf.size());
+      sockServer.Send((const byte *) sendBuf.c_str(), sendBuf.size());
 
     }
   catch (Exception& e)
     {
       cerr << "caught Exception..." << endl;
       cerr << e.what() << endl;
+      sockServer.ShutDown(SHUT_RDWR);
     }
 }

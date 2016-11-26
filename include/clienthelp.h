@@ -24,6 +24,7 @@ using std::ostringstream;
 #include <cryptopp/cryptlib.h>
 using CryptoPP::Exception;
 using CryptoPP::PublicKey;
+using CryptoPP::word32;
 
 #include <cryptopp/socketft.h>
 using CryptoPP::Socket;
@@ -36,6 +37,13 @@ using CryptoPP::Integer;
 
 #include <cryptopp/osrng.h>
 using CryptoPP::AutoSeededRandomPool;
+
+#include <cryptopp/sha.h>
+using CryptoPP::SHA256;
+
+#include <cryptopp/filters.h>
+using CryptoPP::ArraySink;
+using CryptoPP::HashFilter;
 
 const int MAX_BUF = 500;
 

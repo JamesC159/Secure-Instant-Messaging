@@ -1,37 +1,7 @@
-/*
- * Assumptions:   (1) The buddy list is already known in advance
- *                (2) The username and passwords of clients are already known
- *                    in advance.
- * TODO:
- */
-
 #include <networking.h>
 #include <serverhelp.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <errno.h>
-#include <pthread.h>
-#include <semaphore.h>
-
-#include <iostream>
-using std::cout;
-using std::cin;
-using std::cerr;
-using std::endl;
-using std::flush;
-
-#include <string>
-using std::string;
-
-#include <sstream>
-
-using std::ostringstream;
+#include <buddy.h>
+#include <csignal>
 
 struct clientDB
 {
@@ -40,21 +10,42 @@ struct clientDB
   int salt;
 };
 
+const int BUDDIES = 15;
+const string FIN_STR = "FIN";
+const string SYN_STR = "SYN";
+const string RST_STR = "RST";
+struct ThreadData * tdata;
+Buddy* buddylist = new Buddy[BUDDIES];
+Socket sockListen;
+Socket sockSource;
+
 void
 processRequest(char *);
 
 bool
-authenticate(struct clientThreadData *);
+authenticate(struct ThreadData *);
 
 void *
 clientWorker(void *);
 
-Socket sockListen;
-Socket sockSource;
-const string FIN_STR = "FIN"; // These flags can be whatever we want them to be.
-const string SYN_STR = "SYN";
-const string RST_STR = "RST";
-struct clientThreadData * cData;
+void
+SignalHandler(int signum)
+{
+  cout << "Abort signal (" << signum << ") received.\n";
+
+  try
+  {
+      sockListen.ShutDown(SHUT_RDWR);
+      sockSource.ShutDown(SHUT_RDWR);
+  }
+  catch(Exception& e)
+  {
+      cerr << e.what() << endl;
+  }
+
+  exit(signum);
+
+}
 
 /******************************************************************************
  *                            MAIN FUNCTION       
@@ -63,13 +54,15 @@ int
 main(int argc, char ** argv)
 {
 
-  pthread_t clientThread; // Thread to spawn client workers.
-  int rc = 0; // pthread_create() return value.
-  int tcount = 1; // Thread id counter for each client.
+  pthread_t clientThread;
+  int rc = 0;
+  int tcount = 1;
+  sockaddr_in clientaddr;
+  socklen_t clientlen = sizeof(clientaddr);
+  signal(SIGTERM, SignalHandler);
 
   try
     {
-
       sockListen.Create();
       sockSource.Create();
       sockListen.Bind(port);
@@ -92,18 +85,31 @@ main(int argc, char ** argv)
           return -1;
         }
 
+      // Since we know who the buddies are, we are going to initialize them here.
+      for (int i = 0; i < BUDDIES; i++)
+        {
+          buddylist[i].SetUname("Billy" + i);
+          buddylist[i].SetPW("i");
+          buddylist[i].SetAvailable(true);
+        }
+
       // Start client listen-accept phase.
       while (true)
         {
 
-          sockListen.Accept(sockSource);
-          cData = new struct clientThreadData;
-          cData -> tid = tcount;
-          cData -> privateKey = privateKey;
-          cData -> publicKey = publicKey;
+          sockListen.Accept(sockSource, (sockaddr*) &clientaddr, &clientlen);
+          tdata = new struct ThreadData;
+          tdata->tid = tcount;
+          tdata->clientaddr = clientaddr;
+          tdata->clientlen = clientlen;
+          tdata->sockListen = sockListen;
+          tdata->sockSource = sockSource;
+          tdata->publicKey = publicKey;
+          tdata->privateKey = privateKey;
+
           rc
               = pthread_create(&clientThread, NULL, clientWorker,
-                  (void *) cData);
+                  (void *) tdata);
           if (rc)
             {
               fprintf(stderr, "ERROR creating client thread : %d\n", rc);
@@ -111,7 +117,9 @@ main(int argc, char ** argv)
             }
           tcount++;
         }
-      sockListen.CloseSocket();
+
+      delete[] buddylist;
+      sockListen.ShutDown(SHUT_RDWR);
     }
   catch (CryptoPP::Exception& e)
     {
@@ -126,7 +134,7 @@ main(int argc, char ** argv)
  * FUNCTION:      clientWorker    
  * DESCRIPTION:   Thread worker function for accepted client socket 
  *                connections.
- * PARAMETERS:    void * in - clientThreadData structure
+ * PARAMETERS:    void * in - ThreadData structure
  * RETURN:        None
  * NOTES:
  *****************************************************************************/
@@ -138,20 +146,20 @@ clientWorker(void * in)
   bool authenticated = false; // Flag for client authentication recognition.
   string buffer;
 
-  struct clientThreadData * cData; // Client thread data structure.
+  struct ThreadData * tdata; // Client thread data structure.
 
-  cData = (struct clientThreadData *) in;
-  cout << "Client thread " << cData->tid << " Starting..." << endl;
+  tdata = (struct ThreadData *) in;
+  cout << "Client thread " << tdata->tid << " Starting..." << endl;
 
   // First we must authenticate the client. This involves establishing the
   // session key between the client and the server.
   if (!authenticated)
     {
-      fin = authenticate(cData);
+      fin = authenticate(tdata);
       if (!fin)
         {
           cout << "Client did not authenticate" << endl;
-          sockSource.CloseSocket();
+          sockSource.ShutDown(SHUT_RDWR);
           return (void*) -1;
         }
       else
@@ -162,20 +170,20 @@ clientWorker(void * in)
 
     }
 
-  cout << "Beginning session with client " << cData->tid << "..." << endl;
+  cout << "Beginning session with client " << tdata->tid << "..." << endl;
   fin = false;
   while (!fin)
     {
-      buffer = recoverMsg(sockSource, cData);
-      cout << "Enter ACK to client " << cData->tid << ": ";
+      buffer = recoverMsg(tdata);
+      cout << "Enter ACK to client " << tdata->tid << ": ";
       if (!getline(cin, buffer))
         {
           cout << "Failed" << endl;
         }
-      sendMsg(sockSource, buffer, cData);
+      sendMsg(buffer, tdata);
     }
 
-  sockSource.CloseSocket();
+  sockSource.ShutDown(SHUT_RDWR);
   return (void*) 0;
 
 }
@@ -203,46 +211,96 @@ processRequest(char * request)
  * FUNCTION:      authenticate   
  * DESCRIPTION:   Authenticates and establishes Diffie-Hellman session key
  *                between a client and the server.   
- * PARAMETERS:    struct clientThreadData ** cData 
+ * PARAMETERS:    struct ThreadData ** tdata
  *                   - socket descriptor and thread id for the client.
  * RETURN:        true if client successfully authenticated.
  *                false if client authentication was a failure.
  * NOTES:       
  *****************************************************************************/
 bool
-authenticate(struct clientThreadData * cData)
+authenticate(struct ThreadData * tdata)
 {
   try
     {
-      string recovered = recoverMsg(sockSource, cData);
+      string recovered = recoverMsg(tdata); //Get message from client
 
-      // Here we look up the username etc.
       string sendBuf;
-      if (recovered.compare(FIN_STR) == 0)
+      AutoSeededRandomPool rng;
+      Integer nonce, salt;
+      bool foundBuddy = false;
+
+      for (int i = 0; i < BUDDIES; i++)
         {
+          if (buddylist[i].GetUname().compare(recovered) == 0)
+            {
+              ostringstream os;
+              nonce = Integer(rng, 64);
+              salt = Integer(rng, 64);
+              buddylist[i].SetSalt(salt);
+              os << nonce << " " << salt;
+              sendBuf = os.str();
+              os.str(string());
+              foundBuddy = true;
+              cout << "Sending ACK back to client" << endl;
+              sendMsg(sendBuf, tdata);
+            }
+        }
+      if (!foundBuddy)
+        {
+          cout << "Buddy not found" << endl;
           sendBuf = "FIN";
-          cout << "Client requested to close the connection" << endl;
-          sendMsg(sockSource, sendBuf, cData);
+          sendMsg(sendBuf, tdata);
           return false;
+        }
+
+      byte* s;
+      ostringstream os("");
+      os << salt;
+      string temp = os.str();
+      cout << "Salt Encoded: " << temp << endl;
+      s = (byte*) temp.c_str();
+      os.str("");
+
+      recovered = recoverMsg(tdata);
+      istringstream is(recovered);
+      SHA256 hash;
+      string uname, digest, nstr;
+      string tnonce;
+
+      std::getline(is, uname, '~');
+      std::getline(is, digest, '~');
+      std::getline(is, tnonce, '~');
+      nonce = Integer(tnonce.c_str());
+      cout << "Server received: " << endl
+          << uname << endl
+          << digest << endl
+          << nonce << endl;
+
+      string ptemp = "1";
+      byte* p = (byte*) ptemp.c_str();
+      hash.Update(p, sizeof(p));
+      hash.Update(s, sizeof(s));
+      if (!hash.Verify((byte *) digest.c_str()))
+        {
+          throw "Failed to verify hash";
         }
       else
         {
-          cout << "Enter ACK to client " << cData->tid << endl;
-          if (!getline(cin, sendBuf))
-            {
-              cout << "Failed" << endl;
-            }
-
-          cout << "Sending ACK back to client" << endl;
-          sendMsg(sockSource, sendBuf, cData);
+          cout << "Message Digest successfully verified" << endl;
         }
+      return true;
     }
   catch (CryptoPP::Exception& e)
     {
       cerr << "caught Exception..." << endl;
       cerr << e.what() << endl;
+      return false;
     }
-
-  return true;
+  catch (const char* e)
+    {
+      cerr << "caught Exception..." << endl;
+      cerr << e << endl;
+      return false;
+    }
 }
 

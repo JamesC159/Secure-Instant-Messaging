@@ -46,22 +46,7 @@ using CryptoPP::RSA;
 #include <cryptopp/integer.h>
 using CryptoPP::Integer;
 
-const int port = 5001;
-const int MAX_CONN = 25;
-
-struct buddy
-{
-  struct sockaddr_in netInfo; // Buddy connection information
-  int sockDesc; // Buddy socket descriptor
-  bool available; // Flag for availability of the buddy
-
-};
-
-int
-connectToHost(const char *, int);
-
-int
-validatePort(const char *);
+const int port = 5010;
 
 void
 SavePrivateKey(const string& filename, const PrivateKey& key);

@@ -8,7 +8,7 @@
 #include "serverhelp.h"
 
 string
-recoverMsg(Socket& sockSource, struct clientThreadData * cData)
+recoverMsg(struct ThreadData * tdata)
 {
   string recovered, recBuf;
   ostringstream ss;
@@ -20,9 +20,9 @@ recoverMsg(Socket& sockSource, struct clientThreadData * cData)
   try
     {
       // Retrieve message from socket
-      cout << "Waiting to receive a message from client " << cData->tid << endl;
+      cout << "Waiting to receive a message from client " << tdata->tid << endl;
 
-          sockSource.Receive(byteBuf, sizeof(byteBuf));
+      tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
 
           //Convert message to a string
           ss << byteBuf;
@@ -32,7 +32,7 @@ recoverMsg(Socket& sockSource, struct clientThreadData * cData)
 
           //Convert the string to an Integer so we can calculate the inverse
           c = Integer(recBuf.c_str());
-          r = cData->privateKey.CalculateInverse(rng, c);
+          r = tdata->privateKey.CalculateInverse(rng, c);
 
           // Recover the original message
           size_t req = r.MinEncodedSize();
@@ -45,13 +45,13 @@ recoverMsg(Socket& sockSource, struct clientThreadData * cData)
     {
       cerr << "caught Exception..." << endl;
       cerr << e.what() << endl;
-      sockSource.CloseSocket();
+      tdata->sockSource.ShutDown(SHUT_RDWR);
     }
   return recovered;
 }
 
 void
-sendMsg(Socket& sockSource, string sendBuf, struct clientThreadData * cData)
+sendMsg(string sendBuf, struct ThreadData * tdata)
 {
   AutoSeededRandomPool rng;
   Integer m, c, r;
@@ -63,7 +63,7 @@ sendMsg(Socket& sockSource, string sendBuf, struct clientThreadData * cData)
       m = Integer((const byte *) sendBuf.c_str(), sendBuf.size());
 
       //Encrypt
-      c = cData->privateKey.CalculateInverse(rng, m);
+      c = tdata->privateKey.CalculateInverse(rng, m);
 
       //Turn the encrypted value into a string
       ss << c;
@@ -71,13 +71,13 @@ sendMsg(Socket& sockSource, string sendBuf, struct clientThreadData * cData)
       ss.str(string());
       cout << "Cipher Sent: " << sendBuf << endl;
 
-          sockSource.Send((const byte *) sendBuf.c_str(), sendBuf.size());
+      tdata->sockSource.Send((const byte *) sendBuf.c_str(), sendBuf.size());
 
     }
   catch (Exception& e)
     {
       cerr << "caught Exception..." << endl;
       cerr << e.what() << endl;
-      sockSource.CloseSocket();
+      tdata->sockSource.ShutDown(SHUT_RDWR);
     }
 }

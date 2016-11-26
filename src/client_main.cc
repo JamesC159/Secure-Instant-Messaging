@@ -1,12 +1,13 @@
 #include <networking.h>
 #include <clienthelp.h>
-
+#include <csignal>
 #include <errno.h>
 
 #include <iostream>
 using std::cout;
 using std::cin;
 using std::endl;
+using std::getline;
 
 #include <string>
 using std::string;
@@ -19,6 +20,25 @@ using std::istringstream;
 const string FIN_STR = "FIN"; // These flags can be whatever we want them to be.
 const string SYN_STR = "SYN";
 const string RST_STR = "RST";
+Socket sockServer;
+
+void
+SignalHandler(int signum)
+{
+  cout << "Abort signal (" << signum << ") received.\n";
+
+  try
+  {
+      sockServer.ShutDown(SHUT_RDWR);
+  }
+  catch(Exception& e)
+  {
+      cerr << e.what() << endl;
+  }
+
+  exit(signum);
+
+}
 
 /******************************************************************************
  *                         MAIN FUNCTION
@@ -26,6 +46,7 @@ const string RST_STR = "RST";
 int
 main(int argc, char ** argv)
 {
+  signal(SIGTERM, SignalHandler);
 
   // Get listening socket and address
   /*
@@ -52,6 +73,7 @@ main(int argc, char ** argv)
    listen ( serverSock, 20);
    */
   // connect to server
+
   try
     {
       AutoSeededRandomPool rng;
@@ -63,7 +85,6 @@ main(int argc, char ** argv)
           return -1;
         }
 
-      Socket sockServer;
       sockServer.Create();
       sockServer.Connect("localhost", port);
 
@@ -75,39 +96,60 @@ main(int argc, char ** argv)
       // let user talk (and display messages from other user)
       // disconnect
 
-      bool fin = false;
-      while (!fin)
+
+      string sendBuf, recBuf, temp, recovered;
+      Integer m, c, r;
+
+      cout << "Enter your username: ";
+      if (!getline(cin, sendBuf))
         {
-          string sendBuf, recBuf, temp, recovered;
-          ostringstream ss;
-          Integer m, c, r;
-
-          cout << "Enter secret to send to server: ";
-          if (!getline(cin, sendBuf))
-            {
-              cout << "Failed" << endl;
-            }
-          if (sendBuf.compare(FIN_STR) == 0)
-            {
-              fin = true;
-            }
-
-          cout << "FIN value: " << fin << endl;
-          sendMsg(serverKey, sockServer, sendBuf);
-          recovered = recoverMsg(serverKey, sockServer);
-
-          if (recovered.compare(FIN_STR) == 0)
-            {
-              cout << "Since receiving the FIN ACK from server, we are exiting"
-                  << endl;
-              sockServer.CloseSocket();
-              fin = true;
-            }
-
+          cout << "Failed" << endl;
         }
+      sendMsg(serverKey, sockServer, sendBuf);
+      recovered = recoverMsg(serverKey, sockServer);
+
+      if (recovered.compare(FIN_STR) == 0)
+        {
+          cout << "Since receiving the FIN ACK from server, we are exiting"
+              << endl;
+          sockServer.ShutDown(SHUT_RDWR);
+        }
+
+      //Parse nonce and salt reply
+      istringstream is(recovered);
+      Integer nonce, salt;
+      is >> nonce >> salt;
+      cout << "Nonce: " << nonce << endl << "Salt: " << salt << endl;
+      is.str(string());
+
+      //Reply with username, hash of pw, and nonce
+      const byte* uname = (const byte *) sendBuf.c_str();
+      byte* s;
+      string ptemp = "1";
+      byte* p = (byte*)ptemp.c_str();
+      byte digest[SHA256::DIGESTSIZE];
+      SHA256 hash;
+
+      ostringstream os;
+      os << salt;
+      temp = os.str();
+      s = (byte*)temp.c_str();
+      cout << "Salt Encoded: " << s << endl;
+      hash.Update(p, sizeof(p));        //hash password first
+      hash.Update(s, sizeof(s));        //then hash slat
+      hash.Final(digest);               //final result
+      cout << "Sending Hash Stuff" << endl;
+      os.str("");
+      os << uname << "~" << digest << "~" << nonce;
+      cout << "Final String to be Sent: " <<  os.str() << endl;
+      sendBuf = os.str();
+      os.str("");
+      sendMsg(serverKey, sockServer, sendBuf);
+      sockServer.ShutDown(SHUT_RDWR);
     }
   catch (Exception& e)
     {
       cout << "Exception caught: " << e.what() << endl;
+      sockServer.ShutDown(SHUT_RDWR);
     }
 }
