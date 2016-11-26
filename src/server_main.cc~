@@ -35,6 +35,22 @@ using std::stringstream;
 using std::istringstream;
 using std::ostringstream;
 
+/*
+ * Structures.
+ */
+struct clientThreadData
+{
+   int tid;          // Thread ID.
+   int sockDesc;   	// Client socket descriptor.
+	string signature;
+	StringSink * sig;
+	AutoSeededRandomPool rng;
+   RSA::PrivateKey privateKey;
+   RSA::PublicKey publicKey;
+	SocketSource sockListen;
+	SocketSink sockSource;
+};
+
 struct clientDB
 {
    char * username;

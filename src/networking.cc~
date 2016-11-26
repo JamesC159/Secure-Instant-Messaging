@@ -313,7 +313,7 @@ string recoverMsg(RSA::PublicKey serverKey, Socket& sockServer)
 	return recovered;
 }
 
-void sendMsg(RSA::PublicKey serverKey, Socket& sockServer, string sendBuf)
+void sendMsg(RSA::PublicKey serverKey, Socket& sockSource, string sendBuf)
 {
 	AutoSeededRandomPool rng;
 	Integer m, c, r;

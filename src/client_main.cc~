@@ -98,6 +98,7 @@ int main(int argc, char ** argv )
 			string sendBuf, recBuf, temp, recovered;
 			ostringstream ss;
 			Integer m, c, r;
+			byte byteBuf[500];
 			
 			cout << "Enter secret to send to server: ";
 			if(!getline(cin, sendBuf))
