@@ -25,45 +25,15 @@ using std::cout;
 using std::cin;
 using std::cerr;
 using std::endl;
+using std::flush;
 
 #include <string>
 using std::string;
 
-#include "cryptlib.h"
-using CryptoPP::Exception;
-
-#include "cryptopp/rsa.h"
-using CryptoPP::RSA;
-using CryptoPP::RSASS;
-using CryptoPP::InvertibleRSAFunction;
-
-#include "cryptopp/pssr.h"
-using CryptoPP::PSS;
-
-#include "cryptopp/sha.h"
-using CryptoPP::SHA256;
-
-#include "cryptopp/files.h"
-using CryptoPP::FileSink;
-using CryptoPP::FileSource;
-
-#include "cryptopp/filters.h"
-using CryptoPP::ArraySink;
-using CryptoPP::StringSource;
-using CryptoPP::StringSink;
-using CryptoPP::StringStore;
-using CryptoPP::Redirector;
-using CryptoPP::SignerFilter;
-using CryptoPP::SignatureVerificationFilter;
-
-#include "cryptopp/integer.h"
-using CryptoPP::Integer;
-
-#include "cryptopp/osrng.h"
-using CryptoPP::AutoSeededRandomPool;
-
-#include "cryptopp/SecBlock.h"
-using CryptoPP::SecByteBlock;
+#include <sstream>
+using std::stringstream;
+using std::istringstream;
+using std::ostringstream;
 
 /*
  * Structures.
@@ -77,8 +47,8 @@ struct clientThreadData
 	AutoSeededRandomPool rng;
    RSA::PrivateKey privateKey;
    RSA::PublicKey publicKey;
-	RSASS<PSS, SHA256>::Signer signer;
-	RSASS<PSS, SHA256>::Verifier verifier;
+	SocketSource sockListen;
+	SocketSink sockSource;
 };
 
 struct clientDB
@@ -105,12 +75,8 @@ void * clientWorker ( void * );
 /*
  * Globals.
  */
-const char * FIN_STR = "FIN\n\0";   // These flags can be whatever we want
-                                    // them to be.
-const char * SYN_STR = "SYN\n\0";
-const char * RST_STR = "RST\n\0";
-const int MAX_BUF = 8192;
-struct clientDB db;
+Socket sockListen;
+Socket sockSource;
 
 /******************************************************************************
  *                            MAIN FUNCTION       
@@ -156,123 +122,46 @@ main ( int argc, char ** argv )
       return 1;
    }
    
-   // Create socket for server.
-   if ( ! createSocket( serverDesc ) )
+     try
    {
-      perror( "ERROR creating server socket " );
-      return 1;
-   }
-   
-   // Zero out the server/client socket address structure.
-   bzero( ( char * ) & serverAddr, sizeof( serverAddr ) );
-   bzero( ( char * ) & clientAddr, sizeof( clientAddr ) );
-   
-   // Set the socket family, port number, and IP address.
-   serverAddr.sin_family = AF_INET;
-   serverAddr.sin_port = htons( portNo );
-   serverAddr.sin_addr.s_addr = INADDR_ANY;
-   
-   // Bind the listener socket to an address.
-   if ( ! bindSocket( serverDesc, serverAddr ) )
-   {
-      perror ( "ERROR binding socket to an address " );
-      return 1;
-   }
-   
-   // Mark the server socket descriptor as a passive listener.
-   if ( ! listenSocket( serverDesc ) )
-   {
-      perror( "ERROR listening for socket connections " );
-      return 1;
-   }
-   
-   clientLen = sizeof( clientAddr );
+
+		sockListen.Create();
+		sockSource.Create();
+   	sockListen.Bind(portNo);
+   	sockListen.Listen();
 	
-   try
-   {
+	
 		///////////////////////////////////////
 		// Pseudo Random Number Generator
 		AutoSeededRandomPool rng;
 
-		///////////////////////////////////////
-		// Generate Parameters
-		InvertibleRSAFunction params;
-		params.GenerateRandomWithKeySize(rng, 3072);
+		// Below, the values for d and e were swapped
+		Integer n("0xbeaadb3d839f3b5f"), e("0x11"), d("0x21a5ae37b9959db9");
 
-		///////////////////////////////////////
-		// Generated Parameters
-		const Integer & n = params.GetModulus();
-		const Integer & p = params.GetPrime1();
-		const Integer & q = params.GetPrime2();
-		const Integer & d = params.GetPrivateExponent();
-		const Integer & e = params.GetPublicExponent();
+		RSA::PrivateKey privateKey;
+		privateKey.Initialize(n, d, e);
 
-		///////////////////////////////////////
-		// Dump
-		cout << "RSA Parameters:" << endl;
-		cout << " n: " << n << endl;
-		cout << " p: " << p << endl;
-		cout << " q: " << q << endl;
-		cout << " d: " << d << endl;
-		cout << " e: " << e << endl;
-		cout << endl;
+		RSA::PublicKey publicKey;
+		publicKey.Initialize(n, d);
+		
+      SavePublicKey("rsa-public.key", publicKey);
+      SavePrivateKey("rsa-private.key", privateKey);
 
-      RSA::PrivateKey privateKey( params );
-      RSA::PublicKey publicKey( params );
-
-      // Message
-      string message = "Yoda said, Do or Do Not. There is not try.";
-		string signature, recovered; 
-
-       ////////////////////////////////////////////////
-       // Sign and Encode
-       RSASS<PSS, SHA256>::Signer signer( privateKey );
-
-		 StringSource ss1(message, true, 
-		     new SignerFilter(rng, signer,
-		         new StringSink(signature),
-		         true // putMessage for recovery
-		    ) // SignerFilter
-		 ); // StringSource
-
-       ////////////////////////////////////////////////
-       // Verify and Recover
-       RSASS<PSS, SHA256>::Verifier verifier( publicKey );
-
-		 StringSource ss2(signature, true,
-		     new SignatureVerificationFilter(
-		         verifier,
-		         new StringSink(recovered),
-		         CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION | CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION
-		    ) // SignatureVerificationFilter
-		 ); // StringSource
-
-       cout << "Verified signature on message" << endl;
 		 
 	    // Start client listen-accept phase.
 	    while ( true )
 	    {
 
-	       // Accept a client connection.
-	       if ( ! acceptSocket( serverDesc,
-	                            clientDesc,
-	                            clientAddr,
-	                            clientLen ) )
-	       {
-	          perror( "ERROR failed to accept socket connection " );
-	          return 1;
-	       }
-      
+	       sockListen.Accept(sockSource);
+	       
 	       // Create a new clientThreadData structure.
 	       cData = new struct clientThreadData;
 	       cData -> sockDesc = clientDesc;
 	       cData -> tid = tcount;
 			 cData -> privateKey = privateKey;
 			 cData -> publicKey = publicKey;
-			 cData -> signer = signer;
-			 cData -> verifier = verifier;
-			 cData -> signature = signature;
-
+			 //cData -> sockListen = sockListen;
+			 //cData -> sockSource = sockSource;
 	       // Spawn a worker thread for the connecting client.
 	       rc = pthread_create( &clientThread, 
 	                            NULL,
@@ -286,13 +175,13 @@ main ( int argc, char ** argv )
       
 	       tcount++;
 	    }
+	    
+	    sockListen.CloseSocket();
    }
    catch( CryptoPP::Exception& e ) 
 	{
        std::cerr << "Error: " << e.what() << std::endl;
    }
-   
-   close( serverDesc );
 
    return 0;
    
@@ -388,41 +277,19 @@ clientWorker ( void * in )
    
    cData = (struct clientThreadData *)in;
    printf( "Client thread %d starting\n", cData -> tid );
-
    memset( buffer, '\0', sizeof( buffer ) );
 
    // First we must authenticate the client. This involves establishing the
    // session key between the client and the server.
-   if( ! authenticated )
-   {
-      authenticate( &cData );
-      authenticated = true;
+   while (true) {
+   //if( ! authenticated )
+   //{
+      bool res = authenticate( &cData );   
+   //}
    }
+
+	//sockSource.CloseSocket();
    
-   while( ! FIN )
-   {
-      memset( buffer, '\0', sizeof( buffer ) );
-
-      readFromClient( cData -> sockDesc, buffer );
-      processRequest( buffer );
-
-      if ( strcmp( buffer, FIN_STR ) == 0 )
-      {
-         FIN = true;
-      }
-
-      printf( "Received message: %s\n", buffer );  // Note there are 2 '\n'
-                                                   // characters here since
-                                                   // the buffer is being
-                                                   // filled from client stdin.
-      sprintf( msg, "Received your message %s", buffer );
-
-      writeToClient( cData -> sockDesc,
-                     msg );
-   }
-
-   printf( "Client thread %d exitting\n", cData -> tid );
-   close( cData -> sockDesc );
 }
 
 /******************************************************************************
@@ -457,64 +324,65 @@ processRequest( char * request )
 bool
 authenticate( struct clientThreadData ** cData )
 {
-   int bytes = 0;
-   string buffer;
-	string signature;
-	
-	// Scratch Area
-	const unsigned int BLOCKSIZE = 16 * 8;
-	byte pcbScratch[ BLOCKSIZE ];
-
 	try
 	{
-		
-		// Construction
+		string recovered, recBuf, temp, sendBuf;
+		ostringstream ss;
+		Integer c, r, m;
 		AutoSeededRandomPool rng;
-		AutoSeededRandomPool nonce;
-		AutoSeededRandomPool salt;
+		byte byteBuf [MAX_BUF];
 		
-		// Random Block
-		nonce.GenerateBlock( pcbScratch, BLOCKSIZE );
-		salt.GenerateBlock( pcbScratch, BLOCKSIZE );
-	
-	   // Read client username.
-	   readFromClient( (*cData) -> sockDesc, buffer );
+		// Retrieve message from socket
+		sockSource.Receive(byteBuf, sizeof(byteBuf));
+		cout << byteBuf << endl;
 		
-      RSASS<PSS, SHA256>::Signer verifier( (*cData) -> publicKey );
-      StringSource( buffer+signature, true,
-          new SignatureVerificationFilter(
-              (*cData) -> verifier, NULL,
-              SignatureVerificationFilter::THROW_EXCEPTION
-          )
-      );
-
-	   cout << "Verified signature on message" << endl;
+		// Convert message to a string
+		ss << byteBuf;
+		recBuf = ss.str();
+		ss.str(string());
 		
-		// Decrypt message
-		// Check client DB to see if username exists
+		//Convert the string to an Integer so we can calculate the inverse
+		c = Integer(recBuf.c_str());
+    	r = (*cData)->privateKey.CalculateInverse(rng, c);
+    	cout << "c: " << c << endl << "r: " << r << endl;
+    	
+    	// Recover the original message
+    	size_t req = r.MinEncodedSize();
+		recovered.resize(req);
+		r.Encode((byte *)recovered.data(), recovered.size());
+		cout << "recovered: " << recovered << endl;
 		
-		// Write random nonce and salt to client.
-		string msg = "Received your message";
+//////////////////////// SENDING ///////////////////////////////////////////////
 		
-		// Sign the message
-		StringSource( msg, true, 
-							new SignerFilter( rng,
-								(*cData) -> signer,
-								(*cData) -> sig ) );
+		// Get secret to send
+		cout << "Reply back to the client: ";
 		
-		writeToClient( (*cData) -> sockDesc, msg );
-	   
+		if(!getline(cin, sendBuf))
+		{
+			cout << "Failed" << endl;
+		}
+		cout << endl;
+			
+		
+		// Encode the message as an Integer
+		m = Integer((const byte *)sendBuf.c_str(), sendBuf.size());
+		
+		//Encrypt
+		c = (*cData)->privateKey.CalculateInverse(rng, m);
+		
+		//Turn the encrypted value into a string 
+		ss << c;
+		sendBuf = ss.str();
+		ss.str(string());
+		cout << "c: " << sendBuf << endl;
+	   sockSource.Send((const byte *)sendBuf.c_str(), sendBuf.size());
+			   	
 	   // Read username, hash(password, salt), nonce from client.
 	   // Check information against clientDB.
 	   // Generate Diffie-Hellman number.
-	   // Read client Diffie-Hellman number.
+	   // Read client Diffie-Hellman number.eeeeeeeeeee
 	   // Calculate Ksa = Diffie-Hellman key.
 	}
-   catch( SignatureVerificationFilter::SignatureVerificationFailed& e )
-   {
-       cerr << "caught SignatureVerificationFailed..." << endl;
-       cerr << e.what() << endl;
-   }
    catch( CryptoPP::Exception& e )
    {
        cerr << "caught Exception..." << endl;

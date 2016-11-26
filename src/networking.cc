@@ -140,13 +140,7 @@ acceptSocket( int & servDesc,
    
    return true;
 }
-/******************************************************************************
- * FUNCTION:      
- * DESCRIPTION:   
- * PARAMETERS:    
- * RETURN:         
- * NOTES:
- *****************************************************************************/
+
 int
 validatePort( const char * portStr )
 {
@@ -158,4 +152,58 @@ validatePort( const char * portStr )
    }
    
    return portNo;
+}
+
+void SavePrivateKey(const string& filename, const PrivateKey& key)
+{
+	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
+	ByteQueue queue;
+	key.Save(queue);
+
+	Save(filename, queue);
+}
+
+void SavePublicKey(const string& filename, const PublicKey& key)
+{
+	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
+	ByteQueue queue;
+	key.Save(queue);
+
+	Save(filename, queue);
+}
+
+void Save(const string& filename, const BufferedTransformation& bt)
+{
+	// http://www.cryptopp.com/docs/ref/class_file_sink.html
+	FileSink file(filename.c_str());
+
+	bt.CopyTo(file);
+	file.MessageEnd();
+}
+
+void LoadPrivateKey(const string& filename, PrivateKey& key)
+{
+	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
+	ByteQueue queue;
+
+	Load(filename, queue);
+	key.Load(queue);	
+}
+
+void LoadPublicKey(const string& filename, PublicKey& key)
+{
+	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
+	ByteQueue queue;
+
+	Load(filename, queue);
+	key.Load(queue);	
+}
+
+void Load(const string& filename, BufferedTransformation& bt)
+{
+	// http://www.cryptopp.com/docs/ref/class_file_source.html
+	FileSource file(filename.c_str(), true /*pumpAll*/);
+
+	file.TransferTo(bt);
+	bt.MessageEnd();
 }
