@@ -121,4 +121,5 @@ void sendMsg(Socket&, string, struct clientThreadData * );
 string recoverMsg(Socket&,  struct clientThreadData * );
 void sendMsg(RSA::PublicKey, Socket&, string);
 string recoverMsg(RSA::PublicKey, Socket&);
+
 #endif

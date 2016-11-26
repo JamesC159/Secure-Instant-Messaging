@@ -37,131 +37,131 @@ using std::ostringstream;
 
 struct clientDB
 {
-   char * username;
-   char * pwHash;
-   int salt;
+  char * username;
+  char * pwHash;
+  int salt;
 };
 
-/*
- * Helper functions.
- */
-void checkReadWrite( int );
-void processRequest( char * );
-void readFromClient( int &, string );
-void writeToClient( int &, string );
-bool authenticate ( struct clientThreadData *);
+void
+checkReadWrite(int);
 
-/*
- * Thread functions.
- */
-void * clientWorker ( void * );
+void
+processRequest(char *);
 
-/*
- * Globals.
- */
+void
+readFromClient(int &, string);
+
+void
+writeToClient(int &, string);
+
+bool
+authenticate(struct clientThreadData *);
+
+void *
+clientWorker(void *);
+
 Socket sockListen;
 Socket sockSource;
-const string FIN_STR = "FIN";   // These flags can be whatever we want them to be.
+const string FIN_STR = "FIN"; // These flags can be whatever we want them to be.
 const string SYN_STR = "SYN";
 const string RST_STR = "RST";
 struct clientThreadData * cData;
+
 /******************************************************************************
  *                            MAIN FUNCTION       
  *****************************************************************************/
 int
-main ( int argc, char ** argv )
+main(int argc, char ** argv)
 {
 
-   pthread_t clientThread;          // Thread to spawn client workers.
-   int portNo = -1;                 // Port number server is binded to.
-   int rc = 0;                      // pthread_create() return value.
-   int tcount = 1;                  // Thread id counter for each client.
-   
-   // Make sure the port number was provided in the command line arguments.
-   if ( argc < 2 )
-   {
-      fprintf( stderr, "Usage: ./server <portno>\n" );
+  pthread_t clientThread; // Thread to spawn client workers.
+  int portNo = -1; // Port number server is binded to.
+  int rc = 0; // pthread_create() return value.
+  int tcount = 1; // Thread id counter for each client.
+
+  // Make sure the port number was provided in the command line arguments.
+  if (argc < 2)
+    {
+      fprintf(stderr, "Usage: ./server <portno>\n");
       return 0;
-   }
-   
-   // Validate and store the port number provided by the user.
-   portNo = validatePort( argv[1] );
+    }
 
-   if ( portNo == -1 )
-   {
-      if ( errno )
-      {
-         perror( "ERROR failed to convert port number argument to integer" );
-      }
+  // Validate and store the port number provided by the user.
+  portNo = validatePort(argv[1]);
+
+  if (portNo == -1)
+    {
+      if (errno)
+        {
+          perror("ERROR failed to convert port number argument to integer");
+        }
       else
-      {
-         fprintf( stderr, "ERROR invalid port number\n" );
-      }
-      
+        {
+          fprintf(stderr, "ERROR invalid port number\n");
+        }
+
       return 1;
-   }
-   
-     try
-   {
+    }
 
-		sockListen.Create();
-		sockSource.Create();
-   	sockListen.Bind(portNo);
-   	sockListen.Listen();
-	
-	
-		///////////////////////////////////////
-		// Pseudo Random Number Generator
-		AutoSeededRandomPool rng;
+  try
+    {
 
-		// Below, the values for d and e were swapped
-		Integer n("0xbeaadb3d839f3b5f"), e("0x11"), d("0x21a5ae37b9959db9");
+      sockListen.Create();
+      sockSource.Create();
+      sockListen.Bind(portNo);
+      sockListen.Listen();
 
-		RSA::PrivateKey privateKey;
-		privateKey.Initialize(n, d, e);
+      AutoSeededRandomPool rng;
 
-		RSA::PublicKey publicKey;
-		publicKey.Initialize(n, d);
-		
-      SavePublicKey("rsa-public.key", publicKey);
-      SavePrivateKey("rsa-private.key", privateKey);
+      RSA::PrivateKey privateKey;
+      RSA::PublicKey publicKey;
+      LoadPrivateKey("rsa-private.key", privateKey);
+      if (!privateKey.Validate(rng, 3))
+        {
+          cerr << "Failed to load private RSA key";
+          return -1;
+        }
+      LoadPublicKey("rsa-public.key", publicKey);
+      if (!publicKey.Validate(rng, 3))
+        {
+          cerr << "Failed to load public RSA key";
+          return -1;
+        }
 
-		 
-	    // Start client listen-accept phase.
-	    while ( true )
-	    {
+      // Start client listen-accept phase.
+      while (true)
+        {
 
-	       sockListen.Accept(sockSource);
-	       
-	       // Create a new clientThreadData structure.
-	       cData = new struct clientThreadData;
-	       cData -> tid = tcount;
-			 cData -> privateKey = privateKey;
-			 cData -> publicKey = publicKey;
+          sockListen.Accept(sockSource);
 
-	       // Spawn a worker thread for the connecting client.
-	       rc = pthread_create( &clientThread, 
-	                            NULL,
-	                            clientWorker, 
-	                            (void *) cData );
-	       if ( rc )
-	       {
-	          fprintf( stderr, "ERROR creating client thread : %d\n", rc );
-	          return 1;
-	       }
-      
-	       tcount++;
-	    }
-	    
-	    sockListen.CloseSocket();
-   }
-   catch( CryptoPP::Exception& e ) 
-	{
-       std::cerr << "Error: " << e.what() << std::endl;
-   }
+          // Create a new clientThreadData structure.
+          cData = new struct clientThreadData;
+          cData -> tid = tcount;
+          cData -> privateKey = privateKey;
+          cData -> publicKey = publicKey;
 
-   return 0;
-   
+          // Spawn a worker thread for the connecting client.
+          rc
+              = pthread_create(&clientThread, NULL, clientWorker,
+                  (void *) cData);
+          if (rc)
+            {
+              fprintf(stderr, "ERROR creating client thread : %d\n", rc);
+              return 1;
+            }
+
+          tcount++;
+        }
+
+      sockListen.CloseSocket();
+    }
+  catch (CryptoPP::Exception& e)
+    {
+      std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+  return 0;
+
 }
 
 /******************************************************************************
@@ -172,15 +172,15 @@ main ( int argc, char ** argv )
  * RETURN:        None  
  * NOTES:      
  *****************************************************************************/
-void 
-checkReadWrite( int bytes )
+void
+checkReadWrite(int bytes)
 {
-   // Reminder - stack buffer overflows. We need to do something about writing
-   // too much or reading too much.
-   if ( bytes < 0 || bytes > MAX_BUF )
-   {
-      perror( "ERROR failed reading/writing to socket " );
-   }
+  // Reminder - stack buffer overflows. We need to do something about writing
+  // too much or reading too much.
+  if (bytes < 0 || bytes > MAX_BUF)
+    {
+      perror("ERROR failed reading/writing to socket ");
+    }
 }
 
 /******************************************************************************
@@ -194,15 +194,12 @@ checkReadWrite( int bytes )
  * NOTES:      
  *****************************************************************************/
 void
-readFromClient( int & socket, 
-                  string buffer )
+readFromClient(int & socket, string buffer)
 {
-   int bytes = 0;
+  int bytes = 0;
 
-   bytes = read( socket,
-                  (char*)buffer.c_str(),
-                  MAX_BUF );
-   checkReadWrite( bytes );
+  bytes = read(socket, (char*) buffer.c_str(), MAX_BUF);
+  checkReadWrite(bytes);
 
 }
 
@@ -217,15 +214,12 @@ readFromClient( int & socket,
  * NOTES:      
  *****************************************************************************/
 void
-writeToClient( int & socket, 
-                  string msg )
+writeToClient(int & socket, string msg)
 {
-   int bytes = 0;
+  int bytes = 0;
 
-   bytes = write( socket,
-                  (char*)msg.c_str(),
-                  MAX_BUF );
-   checkReadWrite( bytes );
+  bytes = write(socket, (char*) msg.c_str(), MAX_BUF);
+  checkReadWrite(bytes);
 
 }
 
@@ -237,49 +231,54 @@ writeToClient( int & socket,
  * RETURN:        None
  * NOTES:
  *****************************************************************************/
-void * 
-clientWorker ( void * in )
+void *
+clientWorker(void * in)
 {
 
-   bool fin = false;
-   bool authenticated  = false;  // Flag for client authentication recognition.
-   string buffer;
+  bool fin = false;
+  bool authenticated = false; // Flag for client authentication recognition.
+  string buffer;
 
-   struct clientThreadData * cData;    // Client thread data structure.
-   
-   cData = (struct clientThreadData *)in;
-   printf( "Client thread %d starting\n", cData -> tid );
+  struct clientThreadData * cData; // Client thread data structure.
 
-   // First we must authenticate the client. This involves establishing the
-   // session key between the client and the server.
+  cData = (struct clientThreadData *) in;
+  printf("Client thread %d starting\n", cData -> tid);
 
-   if( ! authenticated )
-   {
-      fin = authenticate( cData ); 
+  // First we must authenticate the client. This involves establishing the
+  // session key between the client and the server.
+
+  if (!authenticated)
+    {
+      fin = authenticate(cData);
       if (!fin)
-      {  
-      	cout << "Client did not authenticate" << endl;
-      	return (void*)-1;
-      }
+        {
+          cout << "Client did not authenticate" << endl;
+          sockSource.CloseSocket();
+          return (void*) -1;
+        }
       else
-      {
-      	authenticated = true;
-      	cout << "Client successfully authenticated" << endl;
-      }
-      	
-   }
-   
-   fin = false;
-   while(!fin)
-   {
-   	buffer = recoverMsg(sockSource, cData);
-   	buffer = "My Reply";
-   	sendMsg(sockSource, buffer, cData);
-   }
-   
-   sockSource.CloseSocket();
-	return (void*)0;
-   
+        {
+          authenticated = true;
+          cout << "Client successfully authenticated" << endl;
+        }
+
+    }
+
+  fin = false;
+  while (!fin)
+    {
+      if (!getline(cin, buffer))
+        {
+          cout << "Failed" << endl;
+        }
+      buffer = recoverMsg(sockSource, cData);
+      buffer = "My Reply";
+      sendMsg(sockSource, buffer, cData);
+    }
+
+  sockSource.CloseSocket();
+  return (void*) 0;
+
 }
 
 /******************************************************************************
@@ -290,14 +289,14 @@ clientWorker ( void * in )
  * RETURN:        None
  * NOTES:
  *****************************************************************************/
-void 
-processRequest( char * request )
+void
+processRequest(char * request)
 {
-   // Check if client session request.
-   //    Agree on session key for client-client comm.
-   //    Get ticket to the requested client and send it.
-   // Check if buddy list request.
-   // Check if client wants to close the connection.
+  // Check if client session request.
+  //    Agree on session key for client-client comm.
+  //    Get ticket to the requested client and send it.
+  // Check if buddy list request.
+  // Check if client wants to close the connection.
 
 }
 
@@ -312,42 +311,39 @@ processRequest( char * request )
  * NOTES:       
  *****************************************************************************/
 bool
-authenticate( struct clientThreadData * cData )
+authenticate(struct clientThreadData * cData)
 {
-	try
-	{
-		string recovered = recoverMsg(sockSource, cData);
-		
-		// Here we look up the username etc.
-		string sendBuf;
-		if(recovered.compare(FIN_STR) == 0)
-		{
-			sendBuf = "FIN";
-			sendMsg(sockSource, sendBuf, cData);
-			cout << "Client requested to close the connection" << endl;
-	   	return false;
-		}
-		else
-		{
-			if(!getline(cin, sendBuf))
-			{
-				cout << "Failed" << endl;
-			}
-			else
-			{
-				
-				cout << "Sending authentication ACK back to client" << endl;
-				sendMsg(sockSource, sendBuf, cData);
-			}
-		}
-	}
-   catch( CryptoPP::Exception& e )
-   {
-       cerr << "caught Exception..." << endl;
-       cerr << e.what() << endl;
-   }
-   
-   return true;
-}
+  try
+    {
+      string recovered = recoverMsg(sockSource, cData);
 
+      // Here we look up the username etc.
+      string sendBuf;
+      if (recovered.compare(FIN_STR) == 0)
+        {
+          sendBuf = "FIN";
+          cout << "Client requested to close the connection" << endl;
+          sendMsg(sockSource, sendBuf, cData);
+          return false;
+        }
+      else
+        {
+          if (!getline(cin, sendBuf))
+            {
+              cout << "Failed" << endl;
+            }
+
+          cout << "Sending authentication ACK back to client" << endl;
+          sendMsg(sockSource, sendBuf, cData);
+
+        }
+    }
+  catch (CryptoPP::Exception& e)
+    {
+      cerr << "caught Exception..." << endl;
+      cerr << e.what() << endl;
+    }
+
+  return true;
+}
 

@@ -8,27 +8,28 @@
  * RETURN: 
  * NOTES:        
  *****************************************************************************/
-int connectToHost(const char * hostName, int port)
+int
+connectToHost(const char * hostName, int port)
 {
-   int cliSock = socket(AF_INET, SOCK_STREAM, 0);
-   struct sockaddr_in serverAddr;
-   bzero((void *) &serverAddr, sizeof(serverAddr));
-   struct hostent * he;
-   serverAddr.sin_family = AF_INET;
-   serverAddr.sin_port = htons(port);
-   he = gethostbyname(hostName);      // This should probably be gethostbyaddr()
-   if (he == NULL)
-   {
+  int cliSock = socket(AF_INET, SOCK_STREAM, 0);
+  struct sockaddr_in serverAddr;
+  bzero((void *) &serverAddr, sizeof(serverAddr));
+  struct hostent * he;
+  serverAddr.sin_family = AF_INET;
+  serverAddr.sin_port = htons(port);
+  he = gethostbyname(hostName); // This should probably be gethostbyaddr()
+  if (he == NULL)
+    {
       fprintf(stderr, "Failed to resolve hostname\n");
       return -1;
-   }
-   memcpy(&serverAddr.sin_addr, he->h_addr_list[0], he->h_length);
-   if (connect(cliSock, (struct sockaddr *) &serverAddr, sizeof(serverAddr)) < 0)
-   {
+    }
+  memcpy(&serverAddr.sin_addr, he->h_addr_list[0], he->h_length);
+  if (connect(cliSock, (struct sockaddr *) &serverAddr, sizeof(serverAddr)) < 0)
+    {
       perror("Failed to connect to remote host");
       return -1;
-   }
-   return cliSock;
+    }
+  return cliSock;
 }
 // Hex 07 is end of application message
 /******************************************************************************
@@ -38,19 +39,20 @@ int connectToHost(const char * hostName, int port)
  * RETURN:
  * NOTES:         
  *****************************************************************************/
-char * readFromSocket(int sock, char * & buffer)
+char *
+readFromSocket(int sock, char * & buffer)
 {
-   if (buffer == NULL)
-   {
+  if (buffer == NULL)
+    {
       buffer = (char *) calloc(1024, sizeof(char));
       if (buffer == NULL)
-      {
-         perror("Failed to allocate buffer space in readFromSocket");
-         return NULL;
-      }
-   }
-   
-   return NULL;
+        {
+          perror("Failed to allocate buffer space in readFromSocket");
+          return NULL;
+        }
+    }
+
+  return NULL;
 }
 /******************************************************************************
  * FUNCTION:      
@@ -60,20 +62,18 @@ char * readFromSocket(int sock, char * & buffer)
  * NOTES:
  *****************************************************************************/
 bool
-createSocket( int & sockDesc )
+createSocket(int & sockDesc)
 {
-   
-   sockDesc = socket( AF_INET,
-                      SOCK_STREAM,
-                      0 );
-   
-   if ( sockDesc < 0 )
-   {
+
+  sockDesc = socket(AF_INET, SOCK_STREAM, 0);
+
+  if (sockDesc < 0)
+    {
       return false;
-      
-   }
-   
-   return true;
+
+    }
+
+  return true;
 }
 /******************************************************************************
  * FUNCTION:      
@@ -83,19 +83,17 @@ createSocket( int & sockDesc )
  * NOTES:
  *****************************************************************************/
 bool
-bindSocket( int & sockDesc,
-            struct sockaddr_in & sockAddr )
+bindSocket(int & sockDesc, struct sockaddr_in & sockAddr)
 {
-   
-   if ( bind( sockDesc,
-             (struct sockaddr *) & sockAddr,
-             (socklen_t)sizeof( sockAddr ) ) < 0 )
-   {
-      
+
+  if (bind(sockDesc, (struct sockaddr *) &sockAddr,
+      (socklen_t) sizeof(sockAddr)) < 0)
+    {
+
       return false;
-   }
-   
-   return true;
+    }
+
+  return true;
 }
 /******************************************************************************
  * FUNCTION:      
@@ -105,15 +103,15 @@ bindSocket( int & sockDesc,
  * NOTES:
  *****************************************************************************/
 bool
-listenSocket( int & sockDesc )
+listenSocket(int & sockDesc)
 {
-   
-   if ( listen ( sockDesc, MAX_CONN ) < 0 )
-   {
+
+  if (listen(sockDesc, MAX_CONN) < 0)
+    {
       return false;
-   }
-   
-   return true;
+    }
+
+  return true;
 }
 /******************************************************************************
  * FUNCTION:      
@@ -123,220 +121,228 @@ listenSocket( int & sockDesc )
  * NOTES:
  *****************************************************************************/
 bool
-acceptSocket( int & servDesc,
-              int & cliDesc,
-              struct sockaddr_in & cliAddr,
-              socklen_t & cliLen )
+acceptSocket(int & servDesc, int & cliDesc, struct sockaddr_in & cliAddr,
+    socklen_t & cliLen)
 {
-      
-   cliDesc = accept( servDesc,
-                    (struct sockaddr *) & cliAddr,
-                    & cliLen );
-   
-   if ( cliDesc < 0 )
-   {
+
+  cliDesc = accept(servDesc, (struct sockaddr *) &cliAddr, &cliLen);
+
+  if (cliDesc < 0)
+    {
       return false;
-   }
-   
-   return true;
+    }
+
+  return true;
 }
 
 int
-validatePort( const char * portStr )
+validatePort(const char * portStr)
 {
-   int portNo = (int)strtol( portStr, NULL, 10 );
+  int portNo = (int) strtol(portStr, NULL, 10);
 
-   if (errno || portNo <= 0 || portNo > 65535 )
-   {
+  if (errno || portNo <= 0 || portNo > 65535)
+    {
       return -1;
-   }
-   
-   return portNo;
+    }
+
+  return portNo;
 }
 
-void SavePrivateKey(const string& filename, const PrivateKey& key)
+void
+SavePrivateKey(const string& filename, const PrivateKey& key)
 {
-	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
-	ByteQueue queue;
-	key.Save(queue);
+  // http://www.cryptopp.com/docs/ref/class_byte_queue.html
+  ByteQueue queue;
+  key.Save(queue);
 
-	Save(filename, queue);
+  Save(filename, queue);
 }
 
-void SavePublicKey(const string& filename, const PublicKey& key)
+void
+SavePublicKey(const string& filename, const PublicKey& key)
 {
-	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
-	ByteQueue queue;
-	key.Save(queue);
+  // http://www.cryptopp.com/docs/ref/class_byte_queue.html
+  ByteQueue queue;
+  key.Save(queue);
 
-	Save(filename, queue);
+  Save(filename, queue);
 }
 
-void Save(const string& filename, const BufferedTransformation& bt)
+void
+Save(const string& filename, const BufferedTransformation& bt)
 {
-	// http://www.cryptopp.com/docs/ref/class_file_sink.html
-	FileSink file(filename.c_str());
+  // http://www.cryptopp.com/docs/ref/class_file_sink.html
+  FileSink file(filename.c_str());
 
-	bt.CopyTo(file);
-	file.MessageEnd();
+  bt.CopyTo(file);
+  file.MessageEnd();
 }
 
-void LoadPrivateKey(const string& filename, PrivateKey& key)
+void
+LoadPrivateKey(const string& filename, PrivateKey& key)
 {
-	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
-	ByteQueue queue;
+  // http://www.cryptopp.com/docs/ref/class_byte_queue.html
+  ByteQueue queue;
 
-	Load(filename, queue);
-	key.Load(queue);	
+  Load(filename, queue);
+  key.Load(queue);
 }
 
-void LoadPublicKey(const string& filename, PublicKey& key)
+void
+LoadPublicKey(const string& filename, PublicKey& key)
 {
-	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
-	ByteQueue queue;
+  // http://www.cryptopp.com/docs/ref/class_byte_queue.html
+  ByteQueue queue;
 
-	Load(filename, queue);
-	key.Load(queue);	
+  Load(filename, queue);
+  key.Load(queue);
 }
 
-void Load(const string& filename, BufferedTransformation& bt)
+void
+Load(const string& filename, BufferedTransformation& bt)
 {
-	// http://www.cryptopp.com/docs/ref/class_file_source.html
-	FileSource file(filename.c_str(), true /*pumpAll*/);
+  // http://www.cryptopp.com/docs/ref/class_file_source.html
+  FileSource file(filename.c_str(), true /*pumpAll*/);
 
-	file.TransferTo(bt);
-	bt.MessageEnd();
+  file.TransferTo(bt);
+  bt.MessageEnd();
 }
 
-string recoverMsg(Socket& sockSource, struct clientThreadData * cData)
+string
+recoverMsg(Socket& sockSource, struct clientThreadData * cData)
 {
-	string recovered, recBuf;
-	ostringstream ss;
-	Integer c, r, m;
-	AutoSeededRandomPool rng;
-	byte byteBuf [MAX_BUF];
-	
-	try
-	{	
-		// Retrieve message from socket
-		sockSource.Receive(byteBuf, sizeof(byteBuf));
-		cout << byteBuf << endl;
-		
-		// Convert message to a string
-		ss << byteBuf;
-		recBuf = ss.str();
-		ss.str(string());
-		
-		//Convert the string to an Integer so we can calculate the inverse
-		c = Integer(recBuf.c_str());
-    	r = cData->privateKey.CalculateInverse(rng, c);
-    	cout << "c: " << c << endl << "r: " << r << endl;
-    	
-    	// Recover the original message
-    	size_t req = r.MinEncodedSize();
-		recovered.resize(req);
-		r.Encode((byte *)recovered.data(), recovered.size());
-		cout << "recovered: " << recovered << endl;
-	}
-	catch(Exception& e)
-	{
-		cerr << "caught Exception..." << endl;
+  string recovered, recBuf;
+  ostringstream ss;
+  Integer c, r, m;
+  AutoSeededRandomPool rng;
+  byte byteBuf[MAX_BUF];
+
+  try
+    {
+      // Retrieve message from socket
+      sleep(0.5);
+      sockSource.Receive(byteBuf, sizeof(byteBuf));
+      cout << byteBuf << endl;
+
+      // Convert message to a string
+      ss << byteBuf;
+      recBuf = ss.str();
+      ss.str(string());
+
+      //Convert the string to an Integer so we can calculate the inverse
+      c = Integer(recBuf.c_str());
+      r = cData->privateKey.CalculateInverse(rng, c);
+      cout << "c: " << c << endl << "r: " << r << endl;
+
+      // Recover the original message
+      size_t req = r.MinEncodedSize();
+      recovered.resize(req);
+      r.Encode((byte *) recovered.data(), recovered.size());
+      cout << "recovered: " << recovered << endl;
+    }
+  catch (Exception& e)
+    {
+      cerr << "caught Exception..." << endl;
       cerr << e.what() << endl;
-   }
-		return recovered;
+    }
+  return recovered;
 }
 
-void sendMsg(Socket& sockSource, string sendBuf, struct clientThreadData * cData )
+void
+sendMsg(Socket& sockSource, string sendBuf, struct clientThreadData * cData)
 {
-	AutoSeededRandomPool rng;
-	Integer m, c, r;
-	ostringstream ss;
-	
-	try
-	{
-		// Encode the message as an Integer
-		m = Integer((const byte *)sendBuf.c_str(), sendBuf.size());
-	
-		//Encrypt
-		c = cData->privateKey.CalculateInverse(rng, m);
-		
-		//Turn the encrypted value into a string 
-		ss << c;
-		sendBuf = ss.str();
-		ss.str(string());
-		cout << "c: " << sendBuf << endl;
-		sockSource.Send((const byte *)sendBuf.c_str(), sendBuf.size());
-	}
-	catch(Exception& e)
-	{
-		cerr << "caught Exception..." << endl;
+  AutoSeededRandomPool rng;
+  Integer m, c, r;
+  ostringstream ss;
+
+  try
+    {
+      // Encode the message as an Integer
+      m = Integer((const byte *) sendBuf.c_str(), sendBuf.size());
+
+      //Encrypt
+      c = cData->privateKey.CalculateInverse(rng, m);
+
+      //Turn the encrypted value into a string
+      ss << c;
+      sendBuf = ss.str();
+      ss.str(string());
+      cout << "c: " << sendBuf << endl;
+      sockSource.Send((const byte *) sendBuf.c_str(), sendBuf.size());
+    }
+  catch (Exception& e)
+    {
+      cerr << "caught Exception..." << endl;
       cerr << e.what() << endl;
-   }
+    }
 }
 
-string recoverMsg(RSA::PublicKey serverKey, Socket& sockServer)
+string
+recoverMsg(RSA::PublicKey serverKey, Socket& sockServer)
 {
-	string recovered, recBuf;
-	ostringstream ss;
-	Integer c, r, m;
-	AutoSeededRandomPool rng;
-	byte byteBuf [MAX_BUF];
-	
-	try
-	{	
-		// Retrieve message from socket
-		sockServer.Receive(byteBuf, sizeof(byteBuf));
-		cout << endl << "m received from the server: " << byteBuf << endl;
-		
-		// Convert message to a string
-		ss << byteBuf;
-		recBuf = ss.str();
-		ss.str(string());
-			
-		//Convert the string to an Integer so we can calculate the inverse
-		c = Integer(recBuf.c_str());
-    	r = serverKey.ApplyFunction(c);
-    	cout << "r: " << r << endl;
-    	
-    	// Recover the original message
-    	size_t req = r.MinEncodedSize();
-		recovered.resize(req);
-		r.Encode((byte *)recovered.data(), recovered.size());
-		cout << "recovered: " << recovered << endl;
-	}
-	catch(Exception& e)
-	{
-		cerr << "caught Exception..." << endl;
+  string recovered, recBuf;
+  ostringstream ss;
+  Integer c, r, m;
+  AutoSeededRandomPool rng;
+  byte byteBuf[MAX_BUF];
+
+  try
+    {
+      // Retrieve message from socket
+      sleep(0.5);
+      sockServer.Receive(byteBuf, sizeof(byteBuf));
+      cout << endl << "m received from the server: " << byteBuf << endl;
+
+      // Convert message to a string
+      ss << byteBuf;
+      recBuf = ss.str();
+      ss.str(string());
+
+      //Convert the string to an Integer so we can calculate the inverse
+      c = Integer(recBuf.c_str());
+      r = serverKey.ApplyFunction(c);
+      cout << "r: " << r << endl;
+
+      // Recover the original message
+      size_t req = r.MinEncodedSize();
+      recovered.resize(req);
+      r.Encode((byte *) recovered.data(), recovered.size());
+      cout << "recovered: " << recovered << endl;
+    }
+  catch (Exception& e)
+    {
+      cerr << "caught Exception..." << endl;
       cerr << e.what() << endl;
-   }
-	
-	return recovered;
+    }
+
+  return recovered;
 }
 
-void sendMsg(RSA::PublicKey serverKey, Socket& sockServer, string sendBuf)
+void
+sendMsg(RSA::PublicKey serverKey, Socket& sockServer, string sendBuf)
 {
-	AutoSeededRandomPool rng;
-	Integer m, c, r;
-	ostringstream ss;
-	
-	try
-	{
-		// Encode the message as an Integer
-		m = Integer((const byte *)sendBuf.c_str(), sendBuf.size());
-			
-		//Encrypt
-		c = serverKey.ApplyFunction(m);
-		
-		//Turn the encrypted value into a string
-		ss << c;
-		sendBuf = ss.str();
-		ss.str(string());
-		cout << "m: " << sendBuf << endl;
-		sockServer.Send((const byte *)sendBuf.c_str(), sendBuf.size());
-	}
-	catch(Exception& e)
-	{
-		cerr << "caught Exception..." << endl;
+  AutoSeededRandomPool rng;
+  Integer m, c, r;
+  ostringstream ss;
+
+  try
+    {
+      // Encode the message as an Integer
+      m = Integer((const byte *) sendBuf.c_str(), sendBuf.size());
+
+      //Encrypt
+      c = serverKey.ApplyFunction(m);
+
+      //Turn the encrypted value into a string
+      ss << c;
+      sendBuf = ss.str();
+      ss.str(string());
+      cout << "m: " << sendBuf << endl;
+      sockServer.Send((const byte *) sendBuf.c_str(), sendBuf.size());
+    }
+  catch (Exception& e)
+    {
+      cerr << "caught Exception..." << endl;
       cerr << e.what() << endl;
-   }
+    }
 }

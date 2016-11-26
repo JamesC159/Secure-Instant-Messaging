@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <netdb.h>
+#include <sys/time.h>
 
 #include <iostream>
 using std::cout;
@@ -79,47 +80,74 @@ using CryptoPP::SecByteBlock;
 using CryptoPP::WaitObjectContainer;
 using CryptoPP::CallStack;
 
-const int MAX_CONN = 25;   			// Maximum number of socket connection the server will
-                           			// 	backlog.
+const int MAX_CONN = 25; // Maximum number of socket connection the server will
+// 	backlog.
 const int MAX_BUF = 500;
 
 struct buddy
 {
-   struct sockaddr_in netInfo;   // Buddy connection information
-   int sockDesc;                 // Buddy socket descriptor
-   bool available;               // Flag for availability of the buddy
+  struct sockaddr_in netInfo; // Buddy connection information
+  int sockDesc; // Buddy socket descriptor
+  bool available; // Flag for availability of the buddy
 
 };
 
 struct clientThreadData
 {
-   int tid;          // Thread ID.
-   int sockDesc;   	// Client socket descriptor.
-	string signature;
-	StringSink * sig;
-	AutoSeededRandomPool rng;
-   RSA::PrivateKey privateKey;
-   RSA::PublicKey publicKey;
-	SocketSource sockListen;
-	SocketSink sockSource;
+  int tid; // Thread ID.
+  RSA::PrivateKey privateKey;
+  RSA::PublicKey publicKey;
 };
 
-int connectToHost(const char *, int);
-int validatePort( const char * );
-char * readFromSocket(int, char * &);
-bool createSocket ( int & );
-bool bindSocket ( int & , struct sockaddr_in &  );
-bool listenSocket ( int & );
-bool acceptSocket ( int &, int &, struct sockaddr_in &, socklen_t & );
-void SavePrivateKey(const string& filename, const PrivateKey& key);
-void SavePublicKey(const string& filename, const PublicKey& key);
-void Save(const string& filename, const BufferedTransformation& bt);
-void LoadPrivateKey(const string& filename, PrivateKey& key);
-void LoadPublicKey(const string& filename, PublicKey& key);
-void Load(const string& filename, BufferedTransformation& bt);
-void sendMsg(Socket&, string, struct clientThreadData * );
-string recoverMsg(Socket&,  struct clientThreadData * );
-void sendMsg(RSA::PublicKey, Socket&, string);
-string recoverMsg(RSA::PublicKey, Socket&);
+int
+connectToHost(const char *, int);
+
+int
+validatePort(const char *);
+
+char *
+readFromSocket(int, char * &);
+
+bool
+createSocket(int &);
+
+bool
+bindSocket(int &, struct sockaddr_in &);
+
+bool
+listenSocket(int &);
+
+bool
+acceptSocket(int &, int &, struct sockaddr_in &, socklen_t &);
+
+void
+SavePrivateKey(const string& filename, const PrivateKey& key);
+
+void
+SavePublicKey(const string& filename, const PublicKey& key);
+
+void
+Save(const string& filename, const BufferedTransformation& bt);
+
+void
+LoadPrivateKey(const string& filename, PrivateKey& key);
+
+void
+LoadPublicKey(const string& filename, PublicKey& key);
+void
+
+Load(const string& filename, BufferedTransformation& bt);
+
+void
+sendMsg(Socket&, string, struct clientThreadData *);
+
+string
+recoverMsg(Socket&, struct clientThreadData *);
+
+void
+sendMsg(RSA::PublicKey, Socket&, string);
+
+string
+recoverMsg(RSA::PublicKey, Socket&);
 
 #endif
