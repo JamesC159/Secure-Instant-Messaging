@@ -6,6 +6,7 @@
  */
 
 #include <networking.h>
+#include <serverhelp.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,8 +16,6 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <errno.h>
-#include <string.h>
-#include <strings.h>
 #include <pthread.h>
 #include <semaphore.h>
 
@@ -31,8 +30,7 @@ using std::flush;
 using std::string;
 
 #include <sstream>
-using std::stringstream;
-using std::istringstream;
+
 using std::ostringstream;
 
 struct clientDB
@@ -43,16 +41,7 @@ struct clientDB
 };
 
 void
-checkReadWrite(int);
-
-void
 processRequest(char *);
-
-void
-readFromClient(int &, string);
-
-void
-writeToClient(int &, string);
 
 bool
 authenticate(struct clientThreadData *);
@@ -75,40 +64,15 @@ main(int argc, char ** argv)
 {
 
   pthread_t clientThread; // Thread to spawn client workers.
-  int portNo = -1; // Port number server is binded to.
   int rc = 0; // pthread_create() return value.
   int tcount = 1; // Thread id counter for each client.
-
-  // Make sure the port number was provided in the command line arguments.
-  if (argc < 2)
-    {
-      fprintf(stderr, "Usage: ./server <portno>\n");
-      return 0;
-    }
-
-  // Validate and store the port number provided by the user.
-  portNo = validatePort(argv[1]);
-
-  if (portNo == -1)
-    {
-      if (errno)
-        {
-          perror("ERROR failed to convert port number argument to integer");
-        }
-      else
-        {
-          fprintf(stderr, "ERROR invalid port number\n");
-        }
-
-      return 1;
-    }
 
   try
     {
 
       sockListen.Create();
       sockSource.Create();
-      sockListen.Bind(portNo);
+      sockListen.Bind(port);
       sockListen.Listen();
 
       AutoSeededRandomPool rng;
@@ -133,14 +97,10 @@ main(int argc, char ** argv)
         {
 
           sockListen.Accept(sockSource);
-
-          // Create a new clientThreadData structure.
           cData = new struct clientThreadData;
           cData -> tid = tcount;
           cData -> privateKey = privateKey;
           cData -> publicKey = publicKey;
-
-          // Spawn a worker thread for the connecting client.
           rc
               = pthread_create(&clientThread, NULL, clientWorker,
                   (void *) cData);
@@ -149,10 +109,8 @@ main(int argc, char ** argv)
               fprintf(stderr, "ERROR creating client thread : %d\n", rc);
               return 1;
             }
-
           tcount++;
         }
-
       sockListen.CloseSocket();
     }
   catch (CryptoPP::Exception& e)
@@ -161,65 +119,6 @@ main(int argc, char ** argv)
     }
 
   return 0;
-
-}
-
-/******************************************************************************
- * FUNCTION:      checkReadWrite  
- * DESCRIPTION:   Validates socket reads and writes
- * PARAMETERS:    int bytes
- *                   - number of bytes read or written to a socket descriptor.
- * RETURN:        None  
- * NOTES:      
- *****************************************************************************/
-void
-checkReadWrite(int bytes)
-{
-  // Reminder - stack buffer overflows. We need to do something about writing
-  // too much or reading too much.
-  if (bytes < 0 || bytes > MAX_BUF)
-    {
-      perror("ERROR failed reading/writing to socket ");
-    }
-}
-
-/******************************************************************************
- * FUNCTION:      readFromClient  
- * DESCRIPTION:   reads bytes written to socket descriptor from client
- * PARAMETERS:    char ** buffer
- *                   - message buffer
- *                struct clientThreadData ** cData
- *                   - structure containing client socket/thread info
- * RETURN:        None
- * NOTES:      
- *****************************************************************************/
-void
-readFromClient(int & socket, string buffer)
-{
-  int bytes = 0;
-
-  bytes = read(socket, (char*) buffer.c_str(), MAX_BUF);
-  checkReadWrite(bytes);
-
-}
-
-/******************************************************************************
- * FUNCTION:      readFromClient  
- * DESCRIPTION:   reads bytes written to socket descriptor from client
- * PARAMETERS:    char ** buffer
- *                   - message buffer
- *                struct clientThreadData ** cData
- *                   - structure containing client socket/thread info
- * RETURN:        None
- * NOTES:      
- *****************************************************************************/
-void
-writeToClient(int & socket, string msg)
-{
-  int bytes = 0;
-
-  bytes = write(socket, (char*) msg.c_str(), MAX_BUF);
-  checkReadWrite(bytes);
 
 }
 
@@ -242,11 +141,10 @@ clientWorker(void * in)
   struct clientThreadData * cData; // Client thread data structure.
 
   cData = (struct clientThreadData *) in;
-  printf("Client thread %d starting\n", cData -> tid);
+  cout << "Client thread " << cData->tid << " Starting..." << endl;
 
   // First we must authenticate the client. This involves establishing the
   // session key between the client and the server.
-
   if (!authenticated)
     {
       fin = authenticate(cData);
@@ -264,15 +162,16 @@ clientWorker(void * in)
 
     }
 
+  cout << "Beginning session with client " << cData->tid << "..." << endl;
   fin = false;
   while (!fin)
     {
+      buffer = recoverMsg(sockSource, cData);
+      cout << "Enter ACK to client " << cData->tid << ": ";
       if (!getline(cin, buffer))
         {
           cout << "Failed" << endl;
         }
-      buffer = recoverMsg(sockSource, cData);
-      buffer = "My Reply";
       sendMsg(sockSource, buffer, cData);
     }
 
@@ -328,14 +227,14 @@ authenticate(struct clientThreadData * cData)
         }
       else
         {
+          cout << "Enter ACK to client " << cData->tid << endl;
           if (!getline(cin, sendBuf))
             {
               cout << "Failed" << endl;
             }
 
-          cout << "Sending authentication ACK back to client" << endl;
+          cout << "Sending ACK back to client" << endl;
           sendMsg(sockSource, sendBuf, cData);
-
         }
     }
   catch (CryptoPP::Exception& e)

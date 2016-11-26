@@ -1,5 +1,8 @@
 #include <networking.h>
+#include <clienthelp.h>
+
 #include <errno.h>
+
 #include <iostream>
 using std::cout;
 using std::cin;
@@ -17,11 +20,6 @@ const string FIN_STR = "FIN"; // These flags can be whatever we want them to be.
 const string SYN_STR = "SYN";
 const string RST_STR = "RST";
 
-void
-sendMsg(RSA::PublicKey, Socket&, string);
-string
-recoverMsg(RSA::PublicKey, Socket&);
-
 /******************************************************************************
  *                         MAIN FUNCTION
  *****************************************************************************/
@@ -29,28 +27,6 @@ int
 main(int argc, char ** argv)
 {
 
-  int portno = -1;
-
-  if (argc < 2)
-    {
-      fprintf(stderr, "Usage: client <portno>\n");
-      return -1;
-    }
-
-  portno = validatePort(argv[1]);
-  if (portno == -1)
-    {
-      if (errno)
-        {
-          perror("ERROR failed to convert port number argument to integer");
-        }
-      else
-        {
-          fprintf(stderr, "ERROR invalid port number\n");
-        }
-
-      return 1;
-    }
   // Get listening socket and address
   /*
    int serverSock = socket (AF_INET, SOCK_STREAM, 0);
@@ -89,7 +65,7 @@ main(int argc, char ** argv)
 
       Socket sockServer;
       sockServer.Create();
-      sockServer.Connect("localhost", portno);
+      sockServer.Connect("localhost", port);
 
       // login - agree on session key with server
       // get buddy list from server
@@ -116,7 +92,7 @@ main(int argc, char ** argv)
               fin = true;
             }
 
-          cout << "fin value: " << fin << endl;
+          cout << "FIN value: " << fin << endl;
           sendMsg(serverKey, sockServer, sendBuf);
           recovered = recoverMsg(serverKey, sockServer);
 
