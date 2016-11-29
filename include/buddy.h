@@ -18,83 +18,75 @@ using std::exception;
 #include <string>
 using std::string;
 
-class Buddy : public exception
+class Buddy: public exception
 {
 
 private:
-  string uname;
-  string pw;
-  Socket sock;
-  Integer salt;
-  bool available;
+	string uname;
+	string pw;
+	Socket sock;
+	Integer salt;
+	bool available;
 
 public:
-  Buddy()
-  {
-  }
-  Buddy(string uname, string pw)
-  {
-    this->uname = uname;
-    this->pw = pw;
-    available = false;
-  }
-  ~Buddy()
-  {
-  }
+	Buddy()
+	{
+	}
+	Buddy(string uname, string pw)
+	{
+		this->uname = uname;
+		this->pw = pw;
+		available = false;
+	}
+	~Buddy()
+	{
+	}
 
-  virtual const char*
-  what() const throw ()
-  {
-    return "My exception happened";
-  }
+	virtual const char*
+	what() const throw ()
+	{
+		return "My exception happened";
+	}
 
-  const string
-  GetPW()
-  {
-    return pw;
-  }
+	const string GetPW()
+	{
+		return pw;
+	}
 
-  const string
-  GetUname()
-  {
-    return uname;
-  }
+	const string GetUname()
+	{
+		return uname;
+	}
 
-  const bool
-  GetAvailable()
-  {
-    return available;
-  }
+	const bool GetAvailable()
+	{
+		return available;
+	}
 
-  const Integer
-  GetSalt()
-  {
-    return salt;
-  }
+	const Integer GetSalt()
+	{
+		return salt;
+	}
 
-  void
-  SetPW(const string pw)
-  {
-    this->pw = pw;
-  }
+	void SetPW(const string pw)
+	{
+		this->pw = pw;
+	}
 
-  void
-  SetUname(const string uname)
-  {
-    this->uname = uname;
-  }
+	void SetUname(const string uname)
+	{
+		this->uname = uname;
+	}
 
-  void
-  SetAvailable(const bool a)
-  {
-    available = a;
-  }
+	void SetAvailable(const bool a)
+	{
+		available = a;
+	}
 
-  void
-  SetSalt(const Integer salt)
-  {
-    this->salt = salt;
-  }
+	void SetSalt(const Integer salt)
+	{
+		this->salt = salt;
+	}
 };
 
 #endif
