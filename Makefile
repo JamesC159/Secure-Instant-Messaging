@@ -7,11 +7,11 @@ OBJDIR = objs/
 LDIR = lib/
 
 SERVER_OBJS = $(addprefix ${SDIR}${OBJDIR}, serverhelp.o \
-					buddy.o networking.o server_main.o)
+					Buddy.o BuddyList.o networking.o server_main.o)
 CLIENT_OBJS = $(addprefix ${SDIR}${OBJDIR}, clienthelp.o \
-					buddy.o networking.o client_main.o)
+					Buddy.o BuddyList.o networking.o client_main.o)
 
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -std=c++11
 LDFLAGS=
 CC = g++
 INCLUDES = -I${IDIR}

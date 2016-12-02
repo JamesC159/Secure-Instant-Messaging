@@ -61,9 +61,9 @@ struct ThreadData
 };
 
 void
-sendMsg(string, struct ThreadData *);
+SendMsg( string, struct ThreadData * );
 
 string
-recoverMsg(struct ThreadData *);
+RecoverMsg( struct ThreadData * );
 
 #endif /* SERVERHELP_H_ */

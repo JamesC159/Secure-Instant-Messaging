@@ -16,24 +16,27 @@ using CryptoPP::ByteQueue;
 using CryptoPP::FileSource;
 using CryptoPP::FileSink;
 
+#include <cryptopp/osrng.h>
+using CryptoPP::AutoSeededRandomPool;
+
 const int port = 5010;
 
 void
-SavePrivateKey(const string& filename, const PrivateKey& key);
+SavePrivateKey( const string& filename, const PrivateKey& key );
 
 void
-SavePublicKey(const string& filename, const PublicKey& key);
+SavePublicKey( const string& filename, const PublicKey& key );
 
 void
-Save(const string& filename, const BufferedTransformation& bt);
+Save( const string& filename, const BufferedTransformation& bt );
 
 void
-LoadPrivateKey(const string& filename, PrivateKey& key);
+LoadPrivateKey( const string& filename, PrivateKey& key );
 
 void
-LoadPublicKey(const string& filename, PublicKey& key);
+LoadPublicKey( const string& filename, PublicKey& key );
 
 void
-Load(const string& filename, BufferedTransformation& bt);
+Load( const string& filename, BufferedTransformation& bt );
 
 #endif

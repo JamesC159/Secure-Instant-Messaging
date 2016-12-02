@@ -43,9 +43,9 @@ using CryptoPP::SHA256;
 const int MAX_BUF = 500;
 
 void
-sendMsg(RSA::PublicKey, Socket&, string);
+sendMsg( RSA::PublicKey, Socket&, string );
 
 string
-recoverMsg(RSA::PublicKey, Socket&);
+recoverMsg( RSA::PublicKey, Socket& );
 
 #endif /* CLIENTHELP_H_ */

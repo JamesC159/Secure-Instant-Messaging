@@ -7,20 +7,20 @@
 
 #include "serverhelp.h"
 
-string recoverMsg(struct ThreadData * tdata)
+string RecoverMsg( struct ThreadData * tdata )
 {
 	string recovered, recBuf;
 	ostringstream ss;
 	Integer c, r, m;
 	AutoSeededRandomPool rng;
-	byte byteBuf[MAX_BUF];
+	byte byteBuf[ MAX_BUF ];
 	memset(byteBuf, NULL, sizeof(byteBuf));
 
 	try
 	{
 		// Retrieve message from socket
 		cout << "Waiting to receive a message from client " << tdata->tid
-				<< endl;
+					<< endl;
 
 		tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
 
@@ -40,7 +40,8 @@ string recoverMsg(struct ThreadData * tdata)
 		r.Encode((byte *) recovered.data(), recovered.size());
 		cout << "Recovered: " << recovered << endl;
 
-	} catch (Exception& e)
+	}
+	catch ( Exception& e )
 	{
 		cerr << "caught Exception..." << endl;
 		cerr << e.what() << endl;
@@ -49,7 +50,7 @@ string recoverMsg(struct ThreadData * tdata)
 	return recovered;
 }
 
-void sendMsg(string sendBuf, struct ThreadData * tdata)
+void SendMsg( string sendBuf, struct ThreadData * tdata )
 {
 	AutoSeededRandomPool rng;
 	Integer m, c, r;
@@ -71,7 +72,8 @@ void sendMsg(string sendBuf, struct ThreadData * tdata)
 
 		tdata->sockSource.Send((const byte *) sendBuf.c_str(), sendBuf.size());
 
-	} catch (Exception& e)
+	}
+	catch ( Exception& e )
 	{
 		cerr << "caught Exception..." << endl;
 		cerr << e.what() << endl;
