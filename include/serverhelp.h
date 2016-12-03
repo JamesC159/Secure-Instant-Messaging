@@ -25,6 +25,7 @@ using std::string;
 #include <sstream>
 using std::ostringstream;
 using std::istringstream;
+using std::stringstream;
 
 #include <cryptopp/cryptlib.h>
 using CryptoPP::Exception;
@@ -47,17 +48,22 @@ using CryptoPP::AutoSeededRandomPool;
 #include <cryptopp/sha.h>
 using CryptoPP::SHA256;
 
+#include <tuple>
+using std::tuple;
+using std::make_tuple;
+using std::get;
+
 const int MAX_BUF = 500;
 
 struct ThreadData
 {
-	int tid; // Thread ID.
-	RSA::PrivateKey privateKey;
-	RSA::PublicKey publicKey;
-	Socket sockListen;
-	Socket sockSource;
-	sockaddr_in clientaddr;
-	socklen_t clientlen;
+   int tid; // Thread ID.
+   RSA::PrivateKey privateKey;
+   RSA::PublicKey publicKey;
+   Socket sockListen;
+   Socket sockSource;
+   sockaddr_in clientaddr;
+   socklen_t clientlen;
 };
 
 void

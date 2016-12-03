@@ -15,43 +15,43 @@ using std::string;
 class BuddyList
 {
 private:
-	unordered_map< string, Buddy* > buddies;
+   unordered_map< string, Buddy* > buddies;
 
 public:
-	BuddyList()
-	{
-		buddies.clear();
-	}
+   BuddyList()
+   {
+	  buddies.clear();
+   }
 
-	~BuddyList()
-	{
-		for ( auto& pair : buddies )
-		{
-			delete pair.second;
-		}
-		buddies.clear();
-	}
+   ~BuddyList()
+   {
+	  for ( auto& pair : buddies )
+	  {
+		 delete pair.second;
+	  }
+	  buddies.clear();
+   }
 
-	inline void AddBuddy( string username, Integer port )
-	{
-		buddies.insert(
-					make_pair< string&, Buddy* >(username,
-								new Buddy(username, port)));
-	}
+   inline void AddBuddy( string username, Integer port )
+   {
+	  buddies.insert(
+		       make_pair< string&, Buddy* >(username,
+		                new Buddy(username, port)));
+   }
 
-	inline Buddy*
-	FindBuddy( string username)
-	{
-		auto it = buddies.find(username);
-		if ( it == buddies.end() )
-		{
-			return nullptr;
-		}
-		else
-		{
-			return it->second;
-		}
-	}
+   inline Buddy*
+   FindBuddy( string username )
+   {
+	  auto it = buddies.find(username);
+	  if ( it == buddies.end() )
+	  {
+		 return nullptr;
+	  }
+	  else
+	  {
+		 return it->second;
+	  }
+   }
 
 };
 

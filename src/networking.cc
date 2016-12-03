@@ -1,72 +1,66 @@
 #include <networking.h>
 #include <errno.h>
 
-void
-SavePrivateKey( const string& filename, const PrivateKey& key )
+void SavePrivateKey( const string& filename, const PrivateKey& key )
 {
-	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
-	ByteQueue queue;
-	key.Save(queue);
+   // http://www.cryptopp.com/docs/ref/class_byte_queue.html
+   ByteQueue queue;
+   key.Save(queue);
 
-	Save(filename, queue);
+   Save(filename, queue);
 }
 
-void
-SavePublicKey( const string& filename, const PublicKey& key )
+void SavePublicKey( const string& filename, const PublicKey& key )
 {
-	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
-	ByteQueue queue;
-	key.Save(queue);
+   // http://www.cryptopp.com/docs/ref/class_byte_queue.html
+   ByteQueue queue;
+   key.Save(queue);
 
-	Save(filename, queue);
+   Save(filename, queue);
 }
 
-void
-Save( const string& filename, const BufferedTransformation& bt )
+void Save( const string& filename, const BufferedTransformation& bt )
 {
-	// http://www.cryptopp.com/docs/ref/class_file_sink.html
-	FileSink file(filename.c_str());
+   // http://www.cryptopp.com/docs/ref/class_file_sink.html
+   FileSink file(filename.c_str());
 
-	bt.CopyTo(file);
-	file.MessageEnd();
+   bt.CopyTo(file);
+   file.MessageEnd();
 }
 
-void
-LoadPrivateKey( const string& filename, PrivateKey& key )
+void LoadPrivateKey( const string& filename, PrivateKey& key )
 {
-	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
-	ByteQueue queue;
-	AutoSeededRandomPool rng;
+   // http://www.cryptopp.com/docs/ref/class_byte_queue.html
+   ByteQueue queue;
+   AutoSeededRandomPool rng;
 
-	Load(filename, queue);
-	key.Load(queue);
-	if ( !key.Validate(rng, 3) )
-	{
-		throw ( "Failed to load private key" );
-	}
+   Load(filename, queue);
+   key.Load(queue);
+   if ( !key.Validate(rng, 3) )
+   {
+	  throw("Failed to load private key");
+   }
 }
 
-void
-LoadPublicKey( const string& filename, PublicKey& key )
+void LoadPublicKey( const string& filename, PublicKey& key )
 {
-	// http://www.cryptopp.com/docs/ref/class_byte_queue.html
-	ByteQueue queue;
-	AutoSeededRandomPool rng;
+   // http://www.cryptopp.com/docs/ref/class_byte_queue.html
+   ByteQueue queue;
+   AutoSeededRandomPool rng;
 
-	Load(filename, queue);
-	key.Load(queue);
-	if ( !key.Validate(rng, 3) )
-	{
-		throw ( "Failed to load public key" );
-	}
+   Load(filename, queue);
+   key.Load(queue);
+   if ( !key.Validate(rng, 3) )
+   {
+	  throw("Failed to load public key");
+   }
 }
 
-void
-Load( const string& filename, BufferedTransformation& bt )
+void Load( const string& filename, BufferedTransformation& bt )
 {
-	// http://www.cryptopp.com/docs/ref/class_file_source.html
-	FileSource file(filename.c_str(), true /*pumpAll*/);
+   // http://www.cryptopp.com/docs/ref/class_file_source.html
+   FileSource file(filename.c_str(), true /*pumpAll*/);
 
-	file.TransferTo(bt);
-	bt.MessageEnd();
+   file.TransferTo(bt);
+   bt.MessageEnd();
 }

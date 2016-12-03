@@ -23,74 +23,69 @@ class Buddy : public exception
 {
 
 private:
-	string username;
-	string password;
-	Socket sock;
-	Integer salt;
-	Integer port;
+   string username;
+   string password;
+   Socket sock;
+   Integer salt;
+   Integer port;
 
 public:
-	Buddy()
-	{
-	}
-	Buddy( string username, Integer port )
-	{
-		this->username = username;
-		this->port = port;
-	}
-	Buddy( string username, string password, Integer port )
-	{
-		this->username = username;
-		this->password = password;
-		this->port = port;
-	}
-	Buddy( string username, string password, Integer port, Integer salt )
-	{
-		this->username = username;
-		this->password = password;
-		this->port = port;
-		this->salt = salt;
-	}
-	~Buddy()
-	{
-		sock.ShutDown( SHUT_RDWR);
-	}
+   Buddy()
+   {
+   }
+   Buddy( string username, Integer port )
+   {
+	  this->username = username;
+	  this->port = port;
+   }
+   Buddy( string username, string password, Integer port )
+   {
+	  this->username = username;
+	  this->password = password;
+	  this->port = port;
+   }
+   Buddy( string username, string password, Integer port, Integer salt )
+   {
+	  this->username = username;
+	  this->password = password;
+	  this->port = port;
+	  this->salt = salt;
+   }
+   ~Buddy()
+   {
+	  sock.ShutDown( SHUT_RDWR);
+   }
 
-	virtual const char*
-	what() const throw ()
-	{
-		return "My exception happened";
-	}
+   virtual const char*
+   what() const throw ()
+   {
+	  return "My exception happened";
+   }
 
-	inline const
-	string Getpassword()
-	{
-		return password;
-	}
+   inline const string Getpassword()
+   {
+	  return password;
+   }
 
-	inline const
-	string Getusername()
-	{
-		return username;
-	}
+   inline const string Getusername()
+   {
+	  return username;
+   }
 
-	inline void
-	Setpassword( const string password )
-	{
-		this->password = password;
-	}
+   inline void Setpassword( const string password )
+   {
+	  this->password = password;
+   }
 
-	inline void
-	Setusername( const string username )
-	{
-		this->username = username;
-	}
+   inline void Setusername( const string username )
+   {
+	  this->username = username;
+   }
 
-	inline void
-	SetSalt( const Integer salt )
-	{
-		this->salt = salt;
-	}
+   inline void SetSalt( const Integer salt )
+   {
+	  this->salt = salt;
+   }
 };
 
 #endif
