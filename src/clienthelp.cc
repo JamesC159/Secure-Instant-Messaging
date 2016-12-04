@@ -92,10 +92,10 @@ void sendMsg( Socket& sockServer, string sendBuf )
 
 int swrite(Socket &sock, const char * buff, int len)
 {
-   return sock.Send(buff, len);
+   return sock.Send((byte *)buff, len);
 }
 
 int sread(Socket &sock, char * buff, int len)
 {
-   return sock.Recieve(buff, len);
+   return sock.Receive(buff, len);
 }
