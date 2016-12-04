@@ -14,7 +14,7 @@ void startTalking(Socket *sock)
    done = false;
    charsRead = 0;
    ss.str("");
-   std::thread lthread(sockListener, (void*)sock);
+   std::thread lthread(sockListener, sock);
    while(true)
    {
       char c = getch();
