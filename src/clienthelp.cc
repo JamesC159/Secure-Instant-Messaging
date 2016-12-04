@@ -8,38 +8,48 @@
 #include "clienthelp.h"
 #include <sys/socket.h>
 
-string recoverMsg( RSA::PublicKey serverKey, Socket& sockServer )
-{
-   string recovered, recBuf;
-   ostringstream ss;
-   Integer c, r, m;
-   AutoSeededRandomPool rng;
-   byte byteBuf[ MAX_BUF ];
-   memset(byteBuf, NULL, sizeof(byteBuf));
+RSA::PublicKey serverKey;
 
+string recoverMsg( Socket& sockServer )
+{
    try
    {
+	  string signature = "", recovered = "";
+	  AutoSeededRandomPool rng;
+	  byte byteBuf[ 1000 ];
+
 	  // Retrieve message from socket
 	  cout << "Waiting for reply from server..." << endl;
-	  sockServer.Receive(byteBuf, sizeof(byteBuf));
-	  cout << endl << "Cipher Received: " << byteBuf << endl;
 
-	  // Convert message to a string
+	  size_t bytes = sockServer.Receive(byteBuf, sizeof(byteBuf));
+
+	  string recBuf;
+	  stringstream ss;
+	  Integer c, r, m;
+
+	  // Retrieve message from socket
+//	  RSAES_OAEP_SHA_Decryptor d(tdata->privateKey);
+//	  tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
+
+//Convert message to a string
 	  ss << byteBuf;
 	  recBuf = ss.str();
-	  ss.str(string());
+	  ss.str("");
+	  ss.clear();
 
-	  //Convert the string to an Integer so we can calculate the inverse
 	  c = Integer(recBuf.c_str());
+
+	  // Decrypt
 	  r = serverKey.ApplyFunction(c);
 	  cout << "r: " << r << endl;
 
-	  // Recover the original message
+	  // Round trip the message
 	  size_t req = r.MinEncodedSize();
 	  recovered.resize(req);
 	  r.Encode((byte *) recovered.data(), recovered.size());
-	  cout << "Recovered: " << recovered << endl;
 
+	  cout << "recovered: " << recovered << endl;
+	  return recovered;
    }
    catch ( Exception& e )
    {
@@ -48,31 +58,28 @@ string recoverMsg( RSA::PublicKey serverKey, Socket& sockServer )
 	  sockServer.ShutDown(SHUT_RDWR);
 	  return "";
    }
-
-   return recovered;
 }
 
-void sendMsg( RSA::PublicKey serverKey, Socket& sockServer, string sendBuf )
+void sendMsg( Socket& sockServer, string sendBuf )
 {
-   AutoSeededRandomPool rng;
-   Integer m, c, r;
-   ostringstream ss;
-
    try
    {
-	  // Encode the message as an Integer
-	  m = Integer((const byte *) sendBuf.c_str(), sendBuf.size());
+	  AutoSeededRandomPool rng;
+	  stringstream ss;
+	  Integer m, c, r;
 
-	  //Encrypt
+	  // Treat the message as a big endian array
+	  m = Integer((const byte *) sendBuf.data(), sendBuf.size());
+	  cout << "m: " << m << endl;
+
+	  // Encrypt
 	  c = serverKey.ApplyFunction(m);
-
-	  //Turn the encrypted value into a string
 	  ss << c;
-	  sendBuf = ss.str();
-	  ss.str(string());
-	  cout << "Cipher Sent: " << sendBuf << endl;
+	  string cipher = ss.str();
+	  ss.str("");
+	  ss.clear();
 
-	  sockServer.Send((const byte *) sendBuf.c_str(), sendBuf.size());
+	  sockServer.Send((const byte*) cipher.c_str(), cipher.size());
 
    }
    catch ( Exception& e )

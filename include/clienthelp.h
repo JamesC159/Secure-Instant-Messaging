@@ -13,24 +13,34 @@ using std::cout;
 using std::endl;
 using std::cerr;
 
+#include <algorithm>
+using std::min;
+
 #include <sys/socket.h>
 
 #include <string>
 using std::string;
 
 #include <sstream>
-using std::ostringstream;
+using std::stringstream;
 
 #include <cryptopp/cryptlib.h>
 using CryptoPP::Exception;
 using CryptoPP::PublicKey;
 using CryptoPP::BufferedTransformation;
+using CryptoPP::DecodingResult;
 
 #include <cryptopp/socketft.h>
 using CryptoPP::Socket;
 
+#include <cryptopp/pssr.h>
+using CryptoPP::PSSR;
+
 #include <cryptopp/rsa.h>
 using CryptoPP::RSA;
+using CryptoPP::RSASS;
+using CryptoPP::RSAES_OAEP_SHA_Encryptor;
+using CryptoPP::RSAES_OAEP_SHA_Decryptor;
 
 #include <cryptopp/integer.h>
 using CryptoPP::Integer;
@@ -43,16 +53,42 @@ using CryptoPP::SHA256;
 
 #include <cryptopp/hex.h>
 using CryptoPP::HexEncoder;
+using CryptoPP::HexDecoder;
+
+#include <cryptopp/hmac.h>
+using CryptoPP::HMAC;
 
 #include <cryptopp/filters.h>
 using CryptoPP::StringSource;
 using CryptoPP::StringSink;
+using CryptoPP::HashFilter;
+using CryptoPP::SignerFilter;
+using CryptoPP::SignatureVerificationFilter;
+using CryptoPP::PK_EncryptorFilter;
+using CryptoPP::PK_DecryptorFilter;
+
+#include <cryptopp/nbtheory.h>
+using CryptoPP::ModularExponentiation;
+
+#include <cryptopp/dh.h>
+using CryptoPP::DH;
+
+#include <cryptopp/dh2.h>
+using CryptoPP::DH2;
+
+#include <cryptopp/secblock.h>
+using CryptoPP::SecByteBlock;
+
+#include <stdexcept>
+using std::runtime_error;
+
 const int MAX_BUF = 500;
+extern RSA::PublicKey serverKey;
 
 void
-sendMsg( RSA::PublicKey, Socket&, string );
+sendMsg( Socket&, string );
 
 string
-recoverMsg( RSA::PublicKey, Socket& );
+recoverMsg( Socket& );
 
 #endif /* CLIENTHELP_H_ */

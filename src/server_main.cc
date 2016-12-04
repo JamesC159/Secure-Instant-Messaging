@@ -53,7 +53,7 @@ int main( int argc, char ** argv )
    int tcount = 1;
    sockaddr_in clientaddr;
    socklen_t clientlen = sizeof(clientaddr);
-   signal(SIGTERM, SignalHandler);
+   signal(SIGINT, SignalHandler);
 
    try
    {
@@ -64,10 +64,37 @@ int main( int argc, char ** argv )
 
 	  AutoSeededRandomPool rng;
 	  RSA::PrivateKey privateKey;
-	  RSA::PublicKey publicKey;
+//	  privateKey.GenerateRandomWithKeySize(rng, 2048);
+//	  privateKey.Initialize(Integer(0x9dd403188c219481d10cba1c3f6af8a55b0e103bc4abb1e0f81391df5dd9307e8b5c75904296bacca0041dfc0795983cd5e9a0a0da2521554f250b9239f6ab90f1b13a1d5031fae2fc002a9030c18faa141c568d961c3ae67cd61d5040d78b01c808e9251963f2dbe459f158ab38e8614ee9f676d1be3cd94799f7edf1042f83734edac69c0fe2914153b26fb090a75f1b114b2a48462b2c03874aa93cea7f45562c4a3aa9f29bf1cb6af2a0056a346203e46536efa227dfeb92a7039ab4f6eedcfc30c6246360dd5980a7059435c1970196d6907d7dc37ebaf1755eecc733c6323c0a7137e8d93ae28dd8a02e8cfb9af08b0773dc5b3936c31a4d7cb9ed544f),
+//			   Integer(0x2e6b8870a1af8608104f098fd66ac19a0bb8d7991bba07240cba7632a321c2f80adef566aa2c550f01e317e0b6efc35d2fdb4d5c7c65460a083812764d488cd0471602089f1dc242c296a31b59a2576e422673cf4a4489cb51e49f35b8b7dd971cb753a17ff0385ecab10abfb9e38fa42644d004d44702d67e789436ec88c2adba390b9336e006efd6a0c32a6dc4b0a0dda2e053ca66ee92d5842ce57dc6f34375e29cda145c2fcec11becea6c898eb8c06d10575a524e5ca9672170eb37fe2b713780ddae93dcb778a3a3ff1de85267124fbd0d6689796a53551020cf26eecb11856ce74401b73cdfc016515458c8f6f89661313e32521562e3319150c00719),
+//			   Integer(0x11));
+	  RSA::PublicKey publicKey; //(privateKey);
+//	  publicKey.Initialize(Integer(0x9dd403188c219481d10cba1c3f6af8a55b0e103bc4abb1e0f81391df5dd9307e8b5c75904296bacca0041dfc0795983cd5e9a0a0da2521554f250b9239f6ab90f1b13a1d5031fae2fc002a9030c18faa141c568d961c3ae67cd61d5040d78b01c808e9251963f2dbe459f158ab38e8614ee9f676d1be3cd94799f7edf1042f83734edac69c0fe2914153b26fb090a75f1b114b2a48462b2c03874aa93cea7f45562c4a3aa9f29bf1cb6af2a0056a346203e46536efa227dfeb92a7039ab4f6eedcfc30c6246360dd5980a7059435c1970196d6907d7dc37ebaf1755eecc733c6323c0a7137e8d93ae28dd8a02e8cfb9af08b0773dc5b3936c31a4d7cb9ed544f),
+//			   Integer(0x2e6b8870a1af8608104f098fd66ac19a0bb8d7991bba07240cba7632a321c2f80adef566aa2c550f01e317e0b6efc35d2fdb4d5c7c65460a083812764d488cd0471602089f1dc242c296a31b59a2576e422673cf4a4489cb51e49f35b8b7dd971cb753a17ff0385ecab10abfb9e38fa42644d004d44702d67e789436ec88c2adba390b9336e006efd6a0c32a6dc4b0a0dda2e053ca66ee92d5842ce57dc6f34375e29cda145c2fcec11becea6c898eb8c06d10575a524e5ca9672170eb37fe2b713780ddae93dcb778a3a3ff1de85267124fbd0d6689796a53551020cf26eecb11856ce74401b73cdfc016515458c8f6f89661313e32521562e3319150c00719)
+//);
+//	  SavePrivateKey("rsa-private.key", privateKey);
+//	  SavePublicKey("rsa-public.key", publicKey);
 
 	  LoadPrivateKey("rsa-private.key", privateKey);
+	  if ( !privateKey.Validate(rng, 3) )
+	  {
+		 cerr << "Failed to load server private RSA key";
+		 return -1;
+	  }
+
 	  LoadPublicKey("rsa-public.key", publicKey);
+	  if ( !publicKey.Validate(rng, 3) )
+	  {
+		 cerr << "Failed to load server public RSA key";
+		 return -1;
+	  }
+
+	  // Signer object
+	  RSASS< PSSR, SHA256 >::Signer signer(privateKey);
+
+	  // Create signature space
+	  size_t length = signer.MaxSignatureLength();
+	  SecByteBlock signature(length);
 
 	  // Read in the buddies from the buddies file.
 	  ifstream buddyfile("buddies.txt");
@@ -101,7 +128,7 @@ int main( int argc, char ** argv )
 		 tdata->clientlen = clientlen;
 		 tdata->sockListen = sockListen;
 		 tdata->sockSource = sockSource;
-		 tdata->publicKey = publicKey;
+		 tdata->signer = signer;
 		 tdata->privateKey = privateKey;
 
 		 rc = pthread_create(&clientThread, NULL, clientWorker, (void *) tdata);
@@ -112,16 +139,25 @@ int main( int argc, char ** argv )
 		 }
 		 tcount++;
 	  }
-
-	  sockListen.ShutDown(SHUT_RDWR);
    }
    catch ( CryptoPP::Exception& e )
    {
+	  sockListen.ShutDown(SHUT_RDWR);
+	  sockSource.ShutDown(SHUT_RDWR);
 	  cerr << "ERROR: " << e.what() << endl;
    }
    catch ( const char* e )
    {
+	  sockListen.ShutDown(SHUT_RDWR);
+	  sockSource.ShutDown(SHUT_RDWR);
 	  cerr << "ERROR: " << e << endl;
+   }
+   catch ( const std::exception& e )
+   {
+	  sockListen.ShutDown(SHUT_RDWR);
+	  sockSource.ShutDown(SHUT_RDWR);
+	  cerr << e.what() << endl;
+	  return -1;
    }
 
    return 0;
@@ -129,8 +165,8 @@ int main( int argc, char ** argv )
 }
 
 /******************************************************************************
- * FUNCTION:      clientWorker    
- * DESCRIPTION:   Thread worker function for accepted client socket 
+ * FUNCTION:      clientWorker
+ * DESCRIPTION:   Thread worker function for accepted client socket
  *                connections.
  * PARAMETERS:    void * in - ThreadData structure
  * RETURN:        None
@@ -155,7 +191,6 @@ void * clientWorker( void * in )
 	  if ( !fin )
 	  {
 		 cout << "Client did not authenticate" << endl;
-		 sockSource.ShutDown(SHUT_RDWR);
 		 throw("Client did not authenticate");
 	  }
 	  else
@@ -166,28 +201,172 @@ void * clientWorker( void * in )
 
    }
 
-   cout << "Beginning session with client " << tdata->tid << "..." << endl;
-   fin = false;
-   while ( !fin )
+   //////////////////////////////////////////////////////////////////////////
+   // Bob
+   // Initialize the Diffie-Hellman class with the prime and base that Alice generated.
+   ifstream dhfile("dh.txt");
+   if ( !dhfile.is_open() )
    {
-	  buffer = RecoverMsg(tdata);
-	  cout << "Enter ACK to client " << tdata->tid << ": ";
-	  if ( !getline(cin, buffer) )
-	  {
-		 cout << "Failed" << endl;
-	  }
-	  SendMsg(buffer, tdata);
+	  throw("Failed to authenticate");
    }
+
+   string line;
+   getline(dhfile, line);
+   Integer p = Integer(line.c_str());
+   getline(dhfile, line);
+   Integer g = Integer(line.c_str());
+   getline(dhfile, line);
+   Integer q = Integer(line.c_str());
+
+   DH dh;
+   AutoSeededRandomPool rnd;
+   dh.AccessGroupParameters().Initialize(p, q, g);
+   if ( !dh.GetGroupParameters().ValidateGroup(rnd, 3) )
+   {
+	  throw runtime_error("Failed to validate prime and generator");
+   }
+
+   size_t count = 0;
+
+   p = dh.GetGroupParameters().GetModulus();
+   q = dh.GetGroupParameters().GetSubgroupOrder();
+   g = dh.GetGroupParameters().GetGenerator();
+
+   Integer v = ModularExponentiation(g, q, p);
+   if ( v != Integer::One() )
+   {
+	  throw runtime_error("Failed to verify order of the subgroup");
+   }
+
+   DH2 dhA(dh);
+   SecByteBlock sprivA(dhA.StaticPrivateKeyLength()), spubA(
+	        dhA.StaticPublicKeyLength());
+   SecByteBlock eprivA(dhA.EphemeralPrivateKeyLength()), epubA(
+	        dhA.EphemeralPublicKeyLength());
+
+   dhA.GenerateStaticKeyPair(rnd, sprivA, spubA);
+   dhA.GenerateEphemeralKeyPair(rnd, eprivA, epubA);
+
+   string sendBuf, recvBuf;
+   string saEncoded, eaEncoded, encoding;
+
+//   SecByteBlock nil;
+//   nil.CleanNew(HMAC< SHA256 >::DEFAULT_KEYLENGTH);
+//
+//   HMAC< SHA256 > hmac;
+//   hmac.SetKey(nil.data(), nil.size());
+//
+//
+//   HashFilter filter(hmac, new HexEncoder(new StringSink(encoding)));
+//
+//   filter.Put(spubA.data(), spubA.size());
+//   filter.MessageEnd();
+//
+//   saEncoded = encoding;
+//   encoding = "";
+//
+//   filter.Put(epubA.data(), epubA.size());
+//   filter.MessageEnd();
+//
+//   eaEncoded = encoding;
+//   encoding = "";
+
+   StringSource saSource(spubA.data(), spubA.size(), true,
+	        new HexEncoder(new StringSink(saEncoded)));
+
+   StringSource eaSource(epubA.data(), epubA.size(), true,
+	        new HexEncoder(new StringSink(eaEncoded)));
+
+   cout << endl << "SA Encoded: " << saEncoded << endl << endl << "EA Encoded: " << eaEncoded
+	        << endl << endl;
+
+//   sendBuf = saEncoded + " " + eaEncoded;
+
+//   cout << "Send Buffer: " << sendBuf << endl;
+//   tdata->sockSource.Send((const byte *) sendBuf.c_str(), sendBuf.size());
+   SendMsg(saEncoded, tdata);
+   SendMsg(eaEncoded, tdata);
+
+   string sb = RecoverMsg(tdata);
+   string eb = RecoverMsg(tdata);
+
+   cout << "SB Received: " << sb << endl;
+   cout << "EB Received: " << eb << endl;
+
+//   StringSource ss1(rec, sizeof(rec), true, new StringSink(recvBuf));
+   //Calculate shared secret.
+
+   string decodedSB, decodedEB;
+   StringSource decodeSB(sb, true,
+   		        new HexDecoder( new StringSink(decodedEB)));
+
+   	  StringSource decodeEB(eb, true,
+   	  	  		       new HexDecoder(new StringSink(decodedSB)));
+
+   cout << "Decoded SB: " << decodedSB << endl;
+   cout << "Decoded EB: " << decodedEB << endl;
+
+   SecByteBlock spubB((const byte*) sb.data(), sb.size());
+   SecByteBlock epubB((const byte*) eb.data(), eb.size());
+
+   if ( spubB.size() < dhA.StaticPublicKeyLength() ) spubB.CleanGrow(
+	        dhA.StaticPublicKeyLength());
+   else spubB.resize(dhA.StaticPublicKeyLength());
+
+   if ( epubB.size() < dhA.EphemeralPublicKeyLength() ) epubB.CleanGrow(
+	        dhA.EphemeralPublicKeyLength());
+   else epubB.resize(dhA.EphemeralPublicKeyLength());
+
+   SecByteBlock sharedA(dhA.AgreedValueLength());
+
+   cout << "Agreed Value Length: " << dhA.AgreedValueLength() << endl;
+
+   if ( !dhA.Agree(sharedA, sprivA, eprivA, spubB, epubB) )
+   {
+	  throw runtime_error("Failed to reach shared secret (A)");
+   }
+
+   Integer a, b;
+
+   a.Decode(sharedA.BytePtr(), sharedA.SizeInBytes());
+   cout << "Shared secret (A): " << a << endl;
+
+   sleep(5);
+
+   //////////////////////////////////////////////////////////////
+
+//   if ( dhA.AgreedValueLength() != dhB.AgreedValueLength() ) throw runtime_error(
+//	        "Shared secret size mismatch");
+//
+//   SecByteBlock sharedA(dhA.AgreedValueLength());
+//
+//   if ( !dhA.Agree(sharedA, sprivA, eprivA, spubB, epubB) ) throw runtime_error(
+//	        "Failed to reach shared secret (A)");
+//   count = std::min(dhA.AgreedValueLength(), dhB.AgreedValueLength());
+//   if ( !count || 0 != memcmp(sharedA.BytePtr(), sharedB.BytePtr(), count) ) throw runtime_error(
+//	        "Failed to reach shared secret");
+
+//   cout << "Beginning session with client " << tdata->tid << "..." << endl;
+//   fin = false;
+//   while ( !fin )
+//   {
+//	  buffer = RecoverMsg(tdata);
+//	  cout << "Enter ACK to client " << tdata->tid << ": ";
+//	  if ( !getline(cin, buffer) )
+//	  {
+//		 cout << "Failed" << endl;
+//	  }
+//	  SendMsg(buffer, tdata);
+//   }
 
    sockSource.ShutDown(SHUT_RDWR);
    return (void*) 0;
-
 }
 
 /******************************************************************************
- * FUNCTION:      processRequest  
+ * FUNCTION:      processRequest
  * DESCRIPTION:   Determine client requests to server.
- * PARAMETERS:    char * request 
+ * PARAMETERS:    char * request
  *                   - The client request to the server
  * RETURN:        None
  * NOTES:
@@ -203,14 +382,14 @@ void processRequest( char * request )
 }
 
 /******************************************************************************
- * FUNCTION:      authenticate   
+ * FUNCTION:      authenticate
  * DESCRIPTION:   Authenticates and establishes Diffie-Hellman session key
- *                between a client and the server.   
+ *                between a client and the server.
  * PARAMETERS:    struct ThreadData ** tdata
  *                   - socket descriptor and thread id for the client.
  * RETURN:        true if client successfully authenticated.
  *                false if client authentication was a failure.
- * NOTES:       
+ * NOTES:
  *****************************************************************************/
 bool authenticate( struct ThreadData * tdata )
 {
@@ -228,6 +407,8 @@ bool authenticate( struct ThreadData * tdata )
 
 	  // Get username and passwordfrom client
 	  recvBuf = RecoverMsg(tdata);
+//	   StringSource ss1(rec, sizeof(rec), true, new StringSink(recvBuf));
+
 	  ss.str(recvBuf);
 	  ss >> uname >> password;
 	  salt = clientdb.FindUser(uname);
@@ -262,6 +443,7 @@ bool authenticate( struct ThreadData * tdata )
 
 	  // Receive username, hash(pw, salt) and nonce
 	  recvBuf = RecoverMsg(tdata);
+//	   StringSource ss2(rec, sizeof(rec), true, new StringSink(recvBuf));
 	  ss.str(recvBuf);
 
 	  // Parse the reply
@@ -271,14 +453,12 @@ bool authenticate( struct ThreadData * tdata )
 	  ss.str("");
 	  ss.clear();
 
-	  cout << "Digest string" << digestStr;
-
-//	  if ( nonce != Integer(tnonce.c_str()) )
-//	  {
-//		 sendBuf = "FIN";
-//		 SendMsg(sendBuf, tdata);
-//		 return false;
-//	  }
+	  if ( nonce != Integer(tnonce.c_str()) )
+	  {
+		 sendBuf = "FIN";
+		 SendMsg(sendBuf, tdata);
+		 return false;
+	  }
 
 	  if ( !clientdb.MatchDigest(uname, digestStr) )
 	  {
@@ -296,12 +476,6 @@ bool authenticate( struct ThreadData * tdata )
    {
 	  cerr << "caught Exception..." << endl;
 	  cerr << e.what() << endl;
-	  return false;
-   }
-   catch ( const char* e )
-   {
-	  cerr << "caught Exception..." << endl;
-	  cerr << e << endl;
 	  return false;
    }
 }
