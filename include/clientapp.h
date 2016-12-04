@@ -19,13 +19,13 @@ using CryptoPP::Socket;
 
 #include "getch.h"
 
-extern string ownName;
-extern string otherName;
+extern std::string ownName;
+extern std::string otherName;
 
 
 
-void startTalking(Socket &sock);
-void sockListener(Socket &sock);
+void startTalking(Socket * sock);
+void sockListener(Socket * sock);
 
 
 
