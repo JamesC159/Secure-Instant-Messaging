@@ -19,8 +19,8 @@ using CryptoPP::Socket;
 
 #include "getch.h"
 
-extern char ownName [32];
-extern char otherName [32];
+extern string ownName;
+extern string otherName;
 
 
 

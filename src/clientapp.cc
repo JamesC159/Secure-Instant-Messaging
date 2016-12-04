@@ -9,7 +9,7 @@ int charsRead;
 std::stringstream ss;
 std::mutex screenLock;
 
-void startTalking(Socket &sock)
+void startTalking(Socket *sock)
 {
    done = false;
    charsRead = 0;
@@ -53,7 +53,7 @@ void startTalking(Socket &sock)
    lthread.join();
 }
 
-void sockListener(Socket &sock)
+void sockListener(Socket *sock)
 {
    char buff [1024];
    memset(buff, '\0', sizeof(buff));

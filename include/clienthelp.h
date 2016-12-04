@@ -91,7 +91,7 @@ sendMsg( Socket&, string );
 string
 recoverMsg( Socket& );
 
-int swrite(Socket &sock, const char * buff, int len);
-int sread(Socket &sock, char * buff, int len);
+int swrite(Socket * sock, const char * buff, int len);
+int sread(Socket * sock, char * buff, int len);
 
 #endif /* CLIENTHELP_H_ */
