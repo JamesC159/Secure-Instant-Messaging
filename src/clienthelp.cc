@@ -97,5 +97,5 @@ int swrite(Socket &sock, const char * buff, int len)
 
 int sread(Socket &sock, char * buff, int len)
 {
-   return sock.Receive(buff, len);
+   return sock.Receive((byte *)buff, len);
 }
