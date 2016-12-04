@@ -1,3 +1,6 @@
+#include <clientapp.h>
+
+
 char ownName [32];
 char otherName [32];
 bool done;
