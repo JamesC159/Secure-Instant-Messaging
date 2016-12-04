@@ -75,6 +75,7 @@ int main( int argc, char ** argv )
 //	  Integer m, c, r;
 
 	  // Enter username and password to login. Allow 3 tries.
+          string sendBuf, uname;
 
 	  cout << "Enter your username: ";
 	  if ( !getline(cin, sendBuf) )
