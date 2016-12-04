@@ -89,3 +89,13 @@ void sendMsg( Socket& sockServer, string sendBuf )
 	  sockServer.ShutDown(SHUT_RDWR);
    }
 }
+
+int swrite(Socket &sock, const char * buff, int len)
+{
+   return sock.Send(buff, len);
+}
+
+int sread(Socket &sock, char * buff, int len)
+{
+   return sock.Recieve(buff, len);
+}

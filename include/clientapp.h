@@ -7,6 +7,11 @@
 #include <iostream>
 #include <string>
 
+
+#include <cryptopp/socketft.h>
+using CryptoPP::Socket;
+
+
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -19,8 +24,8 @@ extern char otherName [32];
 
 
 
-void startTalking(int sock);
-void sockListener(int sock);
+void startTalking(Socket &sock);
+void sockListener(Socket &sock);
 
 
 

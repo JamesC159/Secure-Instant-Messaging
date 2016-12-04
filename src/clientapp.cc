@@ -1,14 +1,15 @@
 #include <clientapp.h>
+#include <clienthelp.h>
 
 
-char ownName [32];
-char otherName [32];
+string ownName;
+string otherName;
 bool done;
 int charsRead;
 std::stringstream ss;
 std::mutex screenLock;
 
-void startTalking(int sock)
+void startTalking(Socket &sock)
 {
    done = false;
    charsRead = 0;
@@ -27,9 +28,9 @@ void startTalking(int sock)
       }
       if (c == '\n')
       {
-	 write(sock, ss.str().c_str(), charsRead);
+	 swrite(sock, ss.str().c_str(), charsRead);
 	 printf("\r%s\r", std::string(charsRead, ' ').c_str());
-	 printf("%s: %s\n", ownName, ss.str().c_str());
+	 printf("%s: %s\n", ownName.c_str(), ss.str().c_str());
 	 if (ss.str() == "EXIT")
 	 {
 	    done = true;
@@ -52,24 +53,24 @@ void startTalking(int sock)
    lthread.join();
 }
 
-void sockListener(int sock)
+void sockListener(Socket &sock)
 {
    char buff [1024];
    memset(buff, '\0', sizeof(buff));
    while (true)
    {
-      int cRead = read(sock, buff, sizeof(buff)-1);
+      int cRead = sread(sock, buff, sizeof(buff)-1);
       if (cRead > 0)
       {
          buff[cRead] = '\0';
 	 screenLock.lock();
 	 printf("\r%s\r", std::string(charsRead, ' ').c_str());
-	 printf("%s: %s\n", otherName, buff);
+	 printf("%s: %s\n", otherName.c_str(), buff);
 	 if (std::string(buff) == "EXIT")
 	 {
 	    if (!done)
 	    {
-	       write(sock, buff, strlen(buff));
+	       swrite(sock, buff, strlen(buff));
 	       printf("Session has ended, press a key to continue...");
 	       done = true;
 	    }
