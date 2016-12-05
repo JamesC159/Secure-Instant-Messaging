@@ -2,6 +2,9 @@
 #include <clienthelp.h>
 #include <csignal>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #include <iostream>
 using std::cout;

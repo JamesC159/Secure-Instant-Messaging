@@ -90,12 +90,12 @@ void sendMsg( Socket& sockServer, string sendBuf )
    }
 }
 
-int sWrite(Socket * sock, const char * buff, int len)
+int symWrite(Socket * sock, const char * buff, int len)
 {
    return sock->Send((byte *)buff, len);
 }
 
-int sRead(Socket * sock, char * buff, int len)
+int symRead(Socket * sock, char * buff, int len)
 {
    return sock->Receive((byte *)buff, len);
 }
