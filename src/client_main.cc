@@ -221,9 +221,9 @@ int main( int argc, char ** argv )
 		 dummyServer.Accept(dummySock, (sockaddr *) NULL, (socklen_t *) NULL);
                  char buff [32];
                  memset(buff, '\0', sizeof(buff));
-                 symRead(dAES, cmac, sock, buff, sizeof(buff));
+                 symRead(d, cmac, dummySock, buff, sizeof(buff));
                  otherName = buff;
-                 symWrite(eAES, cmac, sock, ownName.c_str(), ownName.length());
+                 symWrite(e, cmac, dummySock, ownName.c_str(), ownName.length());
 
 		 startTalking(e, d, cmac, &dummySock);
 		 }
@@ -248,10 +248,10 @@ int main( int argc, char ** argv )
 		 Socket dummySock;
 		 dummySock.Create();
 		 dummySock.Connect(ip.c_str(), atoi(port.c_str()));
-                 symWrite(eAES, cmac, sock, ownName.c_str(), ownName.length());
+                 symWrite(e, cmac, dummySock, ownName.c_str(), ownName.length());
                  char buff [32];
                  memset(buff, '\0', sizeof(buff));
-                 symRead(dAES, cmac, sock, buff, sizeof(buff));
+                 symRead(d, cmac, dummySock, buff, sizeof(buff));
                  otherName = buff;
 		 startTalking(e, d, cmac, &dummySock);
 		 }
