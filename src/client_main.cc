@@ -219,7 +219,7 @@ int main( int argc, char ** argv )
 		 dummyServer.Bind(atoi(port.c_str()));
 		 dummyServer.Listen();
 		 dummyServer.Accept(dummySock, (sockaddr *) NULL, (socklen_t *) NULL);
-		 startTalking(e, d, cmac, dummySock);
+		 startTalking(e, d, cmac, &dummySock);
 		 }
 		 else
 		 {
@@ -241,7 +241,7 @@ int main( int argc, char ** argv )
 
 		 Socket dummySock;
 		 dummySock.Create();
-		 dummySock.Connect(ip, atoi(port.c_str()));
+		 dummySock.Connect(ip.c_str(), atoi(port.c_str()));
 		 startTalking(e, d, cmac, &dummySock);
 		 }
 
