@@ -2,8 +2,8 @@
 #include <clienthelp.h>
 
 
-string ownName;
-string otherName;
+std::string ownName;
+std::string otherName;
 bool done;
 int charsRead;
 std::stringstream ss;

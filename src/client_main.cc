@@ -278,17 +278,30 @@ int main( int argc, char ** argv )
 // handle user trying to connect
 // upon connection:
 //
-
-
-
-
-
-
-
-
-
-
-	  sockServer.ShutDown(SHUT_RDWR);
+      Socket cliSock;
+      if(strcmp(argv[1], "server") == 0)
+      {
+         int port = atoi(argv[2]);
+         sockServer.Create();
+         cliSock.Create();
+         sockServer.Bind(port);
+         sockServer.Listen();
+         sockaddr_in cliAddr;
+         int cliLen;
+	 ownName = "Tom";
+	 otherName = "Steve";
+         sockServer.Accept(cliSock, (sockaddr *) &cliAddr, &cliLen);
+         startTalking(&cliSock);
+         sockServer.ShutDown(SHUT_RDWR);
+      }
+      else if (strcmp(argv[1], "client") == 0)
+      {
+         cliSock.Create();
+	 cliSock.Connect(argv[2], atoi(argv[3]));
+	 ownName = "Steve";
+	 otherName = "Tom";
+	 startTalking(&cliSock);
+      }
    }
    catch ( Exception& e )
    {
