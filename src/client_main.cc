@@ -32,6 +32,7 @@ const string FIN_STR = "FIN"; // These flags can be whatever we want them to be.
 const string SYN_STR = "SYN";
 const string RST_STR = "RST";
 Socket sockServer;
+Socket cliSock;
 
 void ParseNonceSalt( Integer&, Integer&, stringstream& );
 
@@ -282,8 +283,10 @@ int main( int argc, char ** argv )
 // handle user trying to connect
 // upon connection:
 //
-      Socket cliSock;
-      if(strcmp(argv[1], "server") == 0)
+      thread lthread(cliconnectlistener, port);
+      cliconnectrequest();
+      startTalking(&cliSock);
+/*      if(strcmp(argv[1], "server") == 0)
       {
          int port = atoi(argv[2]);
          sockServer.Create();
@@ -301,7 +304,7 @@ int main( int argc, char ** argv )
          cliSock.Create();
 	 cliSock.Connect(argv[2], atoi(argv[3]));
 	 startTalking(&cliSock);
-      }
+      }*/
    }
    catch ( Exception& e )
    {

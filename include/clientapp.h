@@ -28,6 +28,7 @@ void startTalking(Socket * sock);
 void sockListener(Socket * sock);
 
 
-
+// from client_main.cc
+extern Socket cliSock;
 
 #endif
