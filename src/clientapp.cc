@@ -14,7 +14,7 @@ void startTalking(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption 
    symWrite(eAES, cmac, sock, ownName.c_str(), ownName.length());
    char buff [32];
    memset(buff, '\0', sizeof(buff));
-   symRead(sock, buff, sizeof(buff));
+   symRead(dAES, cmac, sock, buff, sizeof(buff));
    otherName = buff;
    done = false;
    charsRead = 0;
