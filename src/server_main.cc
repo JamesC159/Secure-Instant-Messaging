@@ -201,163 +201,112 @@ void * clientWorker( void * in )
 
    }
 
-   //////////////////////////////////////////////////////////////////////////
-   // Bob
-   // Initialize the Diffie-Hellman class with the prime and base that Alice generated.
-   ifstream dhfile("dh.txt");
-   if ( !dhfile.is_open() )
+   AutoSeededRandomPool prng;
+
+   SecByteBlock cmacKey(AES::DEFAULT_KEYLENGTH);
+   prng.GenerateBlock(cmacKey, cmacKey.size());
+
+   SecByteBlock aesKey(AES::DEFAULT_KEYLENGTH);
+   prng.GenerateBlock(aesKey, aesKey.size());
+
+   byte iv[ AES::BLOCKSIZE ];
+   prng.GenerateBlock(iv, sizeof(iv));
+
+   string plain;
+   string mac, encoded;
+
+   /*********************************\
+   	\*********************************/
+
+   // Pretty print key
+   encoded.clear();
+   StringSource(aesKey, sizeof(aesKey), true,
+	        new HexEncoder(new StringSink(encoded)) // HexEncoder
+	                 );// StringSource
+
+   cout << "AES Key: " << encoded << endl;
+
+   // Send AES Key
+   SendMsg(encoded, tdata);
+
+   sleep(1);
+
+   // Pretty print iv
+   encoded.clear();
+   encoded = "";
+   StringSource(iv, sizeof(iv), true, new HexEncoder(new StringSink(encoded)) // HexEncoder
+	        );// StringSource
+
+   cout << "AES IV: " << encoded << endl;
+
+   // Send IV
+   SendMsg(encoded, tdata);
+
+   sleep(1);
+
+   // Pretty print CMAC
+   encoded.clear();
+   encoded = "";
+   StringSource(cmacKey, cmacKey.size(), true,
+	        new HexEncoder(new StringSink(encoded)) // HexEncoder
+	                 );// StringSource
+
+   cout << "CMAC Key: " << encoded << endl;
+
+   // Send CMAC Key
+   SendMsg(encoded, tdata);
+
+   try
    {
-	  throw("Failed to authenticate");
+	  CBC_Mode< AES >::Encryption e;
+	  CBC_Mode< AES >::Decryption d;
+	  CMAC< AES > cmac(cmacKey, cmacKey.size());
+	  const int flags = HashVerificationFilter::THROW_EXCEPTION
+		       | HashVerificationFilter::HASH_AT_END;
+
+	  e.SetKeyWithIV(aesKey, aesKey.size(), iv);
+	  d.SetKeyWithIV(aesKey, aesKey.size(), iv);
+
+	  string cipher = RecoverMsg(tdata);
+	  string mac = RecoverMsg(tdata);
+	  string decodedCipher;
+	  string decodedMac;
+	  string recoveredCipher;
+	  string recoveredMac;
+
+	  cout << "Cipher Received: " << cipher << endl;
+
+	  StringSource(cipher, true, new HexDecoder(new StringSink(decodedCipher)));
+
+	  cout << "MAC Received: " << mac << endl;
+
+	  StringSource(mac, true, new HexDecoder(new StringSink(decodedMac)));
+
+	  // The StreamTransformationFilter removes
+	  //  padding as required.
+	  StringSource s(decodedCipher, true,
+		       new StreamTransformationFilter(d, new StringSink(recoveredCipher)) // StreamTransformationFilter
+		                );// StringSource
+
+	  cout << "Recovered: " << recoveredCipher << endl;
+
+	  StringSource(recoveredCipher, true, new HashFilter(cmac, new StringSink(recoveredMac)) // HashFilter
+	  			      );// StringSource
+
+	  // Tamper with message
+//	  				plain[0] ^= 0x01;
+
+	  StringSource(recoveredMac, true,
+		       new HashVerificationFilter(cmac, NULL, flags)); // StringSource
+
+	  cout << "Verified message" << endl;
    }
-
-   string line;
-   getline(dhfile, line);
-   Integer p = Integer(line.c_str());
-   getline(dhfile, line);
-   Integer g = Integer(line.c_str());
-   getline(dhfile, line);
-   Integer q = Integer(line.c_str());
-
-   DH dh;
-   AutoSeededRandomPool rnd;
-   dh.AccessGroupParameters().Initialize(p, q, g);
-   if ( !dh.GetGroupParameters().ValidateGroup(rnd, 3) )
+   catch ( Exception& e )
    {
-	  throw runtime_error("Failed to validate prime and generator");
+	  throw(e);
    }
-
-   size_t count = 0;
-
-   p = dh.GetGroupParameters().GetModulus();
-   q = dh.GetGroupParameters().GetSubgroupOrder();
-   g = dh.GetGroupParameters().GetGenerator();
-
-   Integer v = ModularExponentiation(g, q, p);
-   if ( v != Integer::One() )
-   {
-	  throw runtime_error("Failed to verify order of the subgroup");
-   }
-
-   DH2 dhA(dh);
-   SecByteBlock sprivA(dhA.StaticPrivateKeyLength()), spubA(
-	        dhA.StaticPublicKeyLength());
-   SecByteBlock eprivA(dhA.EphemeralPrivateKeyLength()), epubA(
-	        dhA.EphemeralPublicKeyLength());
-
-   dhA.GenerateStaticKeyPair(rnd, sprivA, spubA);
-   dhA.GenerateEphemeralKeyPair(rnd, eprivA, epubA);
-
-   string sendBuf, recvBuf;
-   string saEncoded, eaEncoded, encoding;
-
-//   SecByteBlock nil;
-//   nil.CleanNew(HMAC< SHA256 >::DEFAULT_KEYLENGTH);
-//
-//   HMAC< SHA256 > hmac;
-//   hmac.SetKey(nil.data(), nil.size());
-//
-//
-//   HashFilter filter(hmac, new HexEncoder(new StringSink(encoding)));
-//
-//   filter.Put(spubA.data(), spubA.size());
-//   filter.MessageEnd();
-//
-//   saEncoded = encoding;
-//   encoding = "";
-//
-//   filter.Put(epubA.data(), epubA.size());
-//   filter.MessageEnd();
-//
-//   eaEncoded = encoding;
-//   encoding = "";
-
-   StringSource saSource(spubA.data(), spubA.size(), true,
-	        new HexEncoder(new StringSink(saEncoded)));
-
-   StringSource eaSource(epubA.data(), epubA.size(), true,
-	        new HexEncoder(new StringSink(eaEncoded)));
-
-   cout << endl << "SA Encoded: " << saEncoded << endl << endl << "EA Encoded: " << eaEncoded
-	        << endl << endl;
-
-//   sendBuf = saEncoded + " " + eaEncoded;
-
-//   cout << "Send Buffer: " << sendBuf << endl;
-//   tdata->sockSource.Send((const byte *) sendBuf.c_str(), sendBuf.size());
-   SendMsg(saEncoded, tdata);
-   SendMsg(eaEncoded, tdata);
-
-   string sb = RecoverMsg(tdata);
-   string eb = RecoverMsg(tdata);
-
-   cout << "SB Received: " << sb << endl;
-   cout << "EB Received: " << eb << endl;
-
-//   StringSource ss1(rec, sizeof(rec), true, new StringSink(recvBuf));
-   //Calculate shared secret.
-
-   string decodedSB, decodedEB;
-   StringSource decodeSB(sb, true,
-   		        new HexDecoder( new StringSink(decodedEB)));
-
-   	  StringSource decodeEB(eb, true,
-   	  	  		       new HexDecoder(new StringSink(decodedSB)));
-
-   cout << "Decoded SB: " << decodedSB << endl;
-   cout << "Decoded EB: " << decodedEB << endl;
-
-   SecByteBlock spubB((const byte*) sb.data(), sb.size());
-   SecByteBlock epubB((const byte*) eb.data(), eb.size());
-
-   if ( spubB.size() < dhA.StaticPublicKeyLength() ) spubB.CleanGrow(
-	        dhA.StaticPublicKeyLength());
-   else spubB.resize(dhA.StaticPublicKeyLength());
-
-   if ( epubB.size() < dhA.EphemeralPublicKeyLength() ) epubB.CleanGrow(
-	        dhA.EphemeralPublicKeyLength());
-   else epubB.resize(dhA.EphemeralPublicKeyLength());
-
-   SecByteBlock sharedA(dhA.AgreedValueLength());
-
-   cout << "Agreed Value Length: " << dhA.AgreedValueLength() << endl;
-
-   if ( !dhA.Agree(sharedA, sprivA, eprivA, spubB, epubB) )
-   {
-	  throw runtime_error("Failed to reach shared secret (A)");
-   }
-
-   Integer a, b;
-
-   a.Decode(sharedA.BytePtr(), sharedA.SizeInBytes());
-   cout << "Shared secret (A): " << a << endl;
 
    sleep(5);
-
-   //////////////////////////////////////////////////////////////
-
-//   if ( dhA.AgreedValueLength() != dhB.AgreedValueLength() ) throw runtime_error(
-//	        "Shared secret size mismatch");
-//
-//   SecByteBlock sharedA(dhA.AgreedValueLength());
-//
-//   if ( !dhA.Agree(sharedA, sprivA, eprivA, spubB, epubB) ) throw runtime_error(
-//	        "Failed to reach shared secret (A)");
-//   count = std::min(dhA.AgreedValueLength(), dhB.AgreedValueLength());
-//   if ( !count || 0 != memcmp(sharedA.BytePtr(), sharedB.BytePtr(), count) ) throw runtime_error(
-//	        "Failed to reach shared secret");
-
-//   cout << "Beginning session with client " << tdata->tid << "..." << endl;
-//   fin = false;
-//   while ( !fin )
-//   {
-//	  buffer = RecoverMsg(tdata);
-//	  cout << "Enter ACK to client " << tdata->tid << ": ";
-//	  if ( !getline(cin, buffer) )
-//	  {
-//		 cout << "Failed" << endl;
-//	  }
-//	  SendMsg(buffer, tdata);
-//   }
 
    sockSource.ShutDown(SHUT_RDWR);
    return (void*) 0;
@@ -467,8 +416,6 @@ bool authenticate( struct ThreadData * tdata )
 		 SendMsg(sendBuf, tdata);
 		 return false;
 	  }
-
-	  // Check username/password against client authentication database
 
 	  return true;
    }

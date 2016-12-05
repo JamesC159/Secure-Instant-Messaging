@@ -30,6 +30,7 @@ using CryptoPP::Exception;
 using CryptoPP::PrivateKey;
 using CryptoPP::INFINITE_TIME;
 using CryptoPP::DecodingResult;
+using CryptoPP::AuthenticatedSymmetricCipher;
 
 #include <cryptopp/socketft.h>
 using CryptoPP::Socket;
@@ -57,17 +58,32 @@ using CryptoPP::SHA256;
 using CryptoPP::HexEncoder;
 using CryptoPP::HexDecoder;
 
+#include "cryptopp/ccm.h"
+using CryptoPP::CBC_Mode;
+
+#include <cryptopp/aes.h>
+using CryptoPP::AES;
+
 #include <cryptopp/hmac.h>
 using CryptoPP::HMAC;
+
+#include "cryptopp/cmac.h"
+using CryptoPP::CMAC;
 
 #include <cryptopp/filters.h>
 using CryptoPP::StringSource;
 using CryptoPP::StringSink;
 using CryptoPP::HashFilter;
+using CryptoPP::HashVerificationFilter;
 using CryptoPP::SignerFilter;
 using CryptoPP::SignatureVerificationFilter;
 using CryptoPP::PK_EncryptorFilter;
 using CryptoPP::PK_DecryptorFilter;
+using CryptoPP::ArraySource;
+using CryptoPP::ArraySink;
+using CryptoPP::AuthenticatedEncryptionFilter;
+using CryptoPP::AuthenticatedDecryptionFilter;
+using CryptoPP::StreamTransformationFilter;
 
 #include <cryptopp/nbtheory.h>
 using CryptoPP::ModularExponentiation;
@@ -88,6 +104,8 @@ using std::get;
 
 #include <stdexcept>
 using std::runtime_error;
+
+#include "assert.h"
 
 const int MAX_BUF = 500;
 

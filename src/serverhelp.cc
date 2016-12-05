@@ -23,14 +23,10 @@ string RecoverMsg( struct ThreadData * tdata )
 
 //	  RSAES_OAEP_SHA_Decryptor d(tdata->privateKey);
 
-	  tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
+	  size_t bytes = tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
 
-	  //Convert message to a string
 	  ss << byteBuf;
 	  recBuf = ss.str();
-	  ss.str("");
-	  ss.clear();
-
 	  c = Integer(recBuf.c_str());
 
 	  // Decrypt
@@ -44,7 +40,6 @@ string RecoverMsg( struct ThreadData * tdata )
 
 	  cout << "recovered: " << recovered << endl;
 	  return recovered;
-
    }
    catch ( Exception& e )
    {

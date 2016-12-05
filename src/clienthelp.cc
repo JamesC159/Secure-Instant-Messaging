@@ -14,28 +14,26 @@ string recoverMsg( Socket& sockServer )
 {
    try
    {
-	  string signature = "", recovered = "";
+	  string recovered = "";
 	  AutoSeededRandomPool rng;
 	  byte byteBuf[ 1000 ];
+	  string recBuf;
+	  stringstream ss;
+	  Integer c, r, m;
 
 	  // Retrieve message from socket
 	  cout << "Waiting for reply from server..." << endl;
 
 	  size_t bytes = sockServer.Receive(byteBuf, sizeof(byteBuf));
 
-	  string recBuf;
-	  stringstream ss;
-	  Integer c, r, m;
+	  ss << byteBuf;
+	  recBuf = ss.str();
 
 	  // Retrieve message from socket
 //	  RSAES_OAEP_SHA_Decryptor d(tdata->privateKey);
 //	  tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
 
 //Convert message to a string
-	  ss << byteBuf;
-	  recBuf = ss.str();
-	  ss.str("");
-	  ss.clear();
 
 	  c = Integer(recBuf.c_str());
 
@@ -48,7 +46,7 @@ string recoverMsg( Socket& sockServer )
 	  recovered.resize(req);
 	  r.Encode((byte *) recovered.data(), recovered.size());
 
-	  cout << "recovered: " << recovered << endl;
+	  //cout << "recovered: " << recovered << endl;
 	  return recovered;
    }
    catch ( Exception& e )
