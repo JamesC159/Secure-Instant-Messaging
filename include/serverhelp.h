@@ -131,4 +131,7 @@ SendMsg( string, struct ThreadData * );
 string
 RecoverMsg( struct ThreadData * );
 
+int symWrite(CBC_Mode< AES >::Encryption, CMAC< AES >, Socket * sock, const char * buff, int len);
+int symRead(CBC_Mode< AES >::Decryption, CMAC< AES >, Socket * sock, char * buff, int len);
+
 #endif /* SERVERHELP_H_ */

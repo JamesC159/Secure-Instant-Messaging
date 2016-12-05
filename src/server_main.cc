@@ -218,40 +218,27 @@ void * clientWorker( void * in )
    /*********************************\
    	\*********************************/
 
-   // Pretty print key
    encoded.clear();
-   StringSource(aesKey, sizeof(aesKey), true,
-	        new HexEncoder(new StringSink(encoded)) // HexEncoder
+   StringSource(aesKey.data(), aesKey.size(), true,
+	       new StringSink(encoded) // HexEncoder
 	                 );// StringSource
-
-   cout << "AES Key: " << encoded << endl;
 
    // Send AES Key
    SendMsg(encoded, tdata);
 
-   sleep(1);
-
-   // Pretty print iv
    encoded.clear();
    encoded = "";
-   StringSource(iv, sizeof(iv), true, new HexEncoder(new StringSink(encoded)) // HexEncoder
+   StringSource(iv, sizeof(iv), true, new StringSink(encoded) // HexEncoder
 	        );// StringSource
-
-   cout << "AES IV: " << encoded << endl;
 
    // Send IV
    SendMsg(encoded, tdata);
 
-   sleep(1);
-
-   // Pretty print CMAC
    encoded.clear();
    encoded = "";
-   StringSource(cmacKey, cmacKey.size(), true,
-	        new HexEncoder(new StringSink(encoded)) // HexEncoder
+   StringSource(cmacKey.data(), cmacKey.size(), true,
+	       new StringSink(encoded) // HexEncoder
 	                 );// StringSource
-
-   cout << "CMAC Key: " << encoded << endl;
 
    // Send CMAC Key
    SendMsg(encoded, tdata);
@@ -261,56 +248,27 @@ void * clientWorker( void * in )
 	  CBC_Mode< AES >::Encryption e;
 	  CBC_Mode< AES >::Decryption d;
 	  CMAC< AES > cmac(cmacKey, cmacKey.size());
-	  const int flags = HashVerificationFilter::THROW_EXCEPTION
-		       | HashVerificationFilter::HASH_AT_END;
 
 	  e.SetKeyWithIV(aesKey, aesKey.size(), iv);
 	  d.SetKeyWithIV(aesKey, aesKey.size(), iv);
 
-	  string decodedCipher;
-	  string decodedMac;
-	  string recoveredCipher;
-	  string recoveredMac;
+	  char readBuff[1024];
+	  char writeBuff[1024];
+	  memset(readBuff, 0, sizeof(readBuff));
+	  memset(writeBuff, 0, sizeof(writeBuff));
 
-	  string cipher = RecoverMsg(tdata);
+	  size_t bytes = symRead(d, cmac, &(tdata->sockSource), readBuff, sizeof(readBuff) );
+	  cout << "Bytes read: " << bytes << endl;
 
-	  cout << "Cipher Received: " << cipher << endl;
-
-	  StringSource(cipher, true, new HexDecoder(new StringSink(decodedCipher)));
-
-	  string mac = RecoverMsg(tdata);
-
-	  cout << "MAC Received: " << mac << endl;
-
-	  StringSource(mac, true, new HexDecoder(new StringSink(decodedMac)));
-
-	  // The StreamTransformationFilter removes
-	  //  padding as required.
-	  StringSource s(decodedCipher, true,
-		       new StreamTransformationFilter(d,
-		                new StringSink(recoveredCipher)) // StreamTransformationFilter
-		                         );// StringSource
-
-	  cout << "Recovered: " << recoveredCipher << endl;
-
-	  StringSource(recoveredCipher, true,
-		       new HashFilter(cmac, new StringSink(recoveredMac)) // HashFilter
-		                );// StringSource
-
-	  // Tamper with message
-//	  				plain[0] ^= 0x01;
-
-	  StringSource(recoveredMac, true,
-		       new HashVerificationFilter(cmac, NULL, flags)); // StringSource
-
-	  cout << "Verified message" << endl;
+	  if (strcmp(readBuff, "GetBuddyList") == 0)
+	  {
+		 cout << "Received the buddy list!" << endl;
+	  }
    }
    catch ( Exception& e )
    {
 	  throw(e);
    }
-
-   sleep(5);
 
    sockSource.ShutDown(SHUT_RDWR);
    return (void*) 0;

@@ -152,31 +152,28 @@ int main( int argc, char ** argv )
 	  string iv_str = recoverMsg(sockServer);
 	  string cmac_str = recoverMsg(sockServer);
 
-	  cout << "AES Key: " << aes_str << endl;
-	  cout << "IV: " << iv_str << endl;
-	  cout << "CMAC Key: " << cmac_str << endl;
+	  cout << "AES Key(includes control chars): " << aes_str << endl;
+	  cout << "IV(includes control chars): " << iv_str << endl;
+	  cout << "CMAC Key(includes control chars): " << cmac_str << endl;
 
 	  SecByteBlock cmac_key(AES::DEFAULT_KEYLENGTH);
 	  SecByteBlock server_key(AES::DEFAULT_KEYLENGTH);
 	  byte iv[ AES::BLOCKSIZE ];
 
 	  ArraySource((const byte*) aes_str.c_str(), aes_str.size(), true,
-		       new HexDecoder(new ArraySink(server_key, sizeof(server_key))));
+		       new ArraySink(server_key, sizeof(server_key)));
 
 	  ArraySource((const byte*) iv_str.c_str(), iv_str.size(), true,
-		       new HexDecoder(new ArraySink(iv, sizeof(iv))));
+		       new ArraySink(iv, sizeof(iv)));
 
 	  ArraySource((const byte*) cmac_str.c_str(), cmac_str.size(), true,
-		       new HexDecoder(new ArraySink(cmac_key, sizeof(cmac_key))));
+		       new ArraySink(cmac_key, sizeof(cmac_key)));
 
 	  try
 	  {
-
 		 CBC_Mode< AES >::Encryption e;
 		 CBC_Mode< AES >::Decryption d;
 		 CMAC< AES > cmac(cmac_key, cmac_key.size());
-		 const int flags = HashVerificationFilter::THROW_EXCEPTION
-			      | HashVerificationFilter::HASH_AT_END;
 
 		 e.SetKeyWithIV(server_key, server_key.size(), iv);
 		 d.SetKeyWithIV(server_key, server_key.size(), iv);
@@ -184,39 +181,8 @@ int main( int argc, char ** argv )
 		 // The StreamTransformationFilter removes
 		 //  padding as required.
 		 string plain = "GetBuddyList";
-		 string cipher;
-		 string mac;
-		 string encoded;
 
-		 StringSource s(plain, true,
-			      new StreamTransformationFilter(e, new StringSink(cipher)) // StreamTransformationFilter
-			               );// StringSource
-
-		 // Pretty print
-		 encoded.clear();
-		 encoded = "";
-		 StringSource(cipher, true, new HexEncoder(new StringSink(encoded)) // HexEncoder
-			      );// StringSource
-
-		 // Send Cipher with CMAC to Server (Request for BuddyList)
-		 cout << "Cipher Text Buddy List Request: " << encoded << endl;
-
-		 size_t bytes = sockServer.Send((const byte*) encoded.c_str(), encoded.size());
-
-		 sleep(2);
-
-		 StringSource(plain, true, new HashFilter(cmac, new StringSink(mac)) // HashFilter
-			      );// StringSource
-
-		 // Pretty print
-		 encoded.clear();
-		 encoded = "";
-		 StringSource(mac, true, new HexEncoder(new StringSink(encoded)) // HexEncoder
-			      );// StringSource
-
-		 cout << "Cipher Text Buddy List MAC: " << encoded << endl;
-
-		 bytes = sockServer.Send((const byte*) encoded.c_str(), encoded.size());
+		 symWrite(e, cmac, &sockServer, plain.c_str(), plain.length());
 	  }
 	  catch ( const CryptoPP::Exception& e )
 	  {

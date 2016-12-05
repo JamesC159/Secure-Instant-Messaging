@@ -113,4 +113,7 @@ sendMsg( Socket&, string );
 string
 recoverMsg( Socket& );
 
+int symWrite(CBC_Mode< AES >::Encryption, CMAC< AES >, Socket * sock, const char * buff, int len);
+int symRead(CBC_Mode< AES >::Decryption, CMAC< AES >, Socket * sock, char * buff, int len);
+
 #endif /* CLIENTHELP_H_ */
