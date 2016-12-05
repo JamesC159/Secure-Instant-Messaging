@@ -1,5 +1,6 @@
 #include <networking.h>
 #include <clienthelp.h>
+#include <clientapp.h>
 #include <csignal>
 #include <errno.h>
 
@@ -196,7 +197,7 @@ int main( int argc, char ** argv )
 
 		 cout << "Are you server?: ";
 		 string isServer;
-		 if ( !getline(cin, ip) )
+		 if ( !getline(cin, isServer) )
 		 {
 			throw(new Exception(Exception::IO_ERROR,
 			         "Failed to get client request from user."));
