@@ -293,7 +293,7 @@ int main( int argc, char ** argv )
          int cliLen;
 	 ownName = "Tom";
 	 otherName = "Steve";
-         sockServer.Accept(cliSock, (sockaddr *) &cliAddr, &cliLen);
+         sockServer.Accept(cliSock, (sockaddr *) &cliAddr, (socklen_t *) &cliLen);
          startTalking(&cliSock);
          sockServer.ShutDown(SHUT_RDWR);
       }
