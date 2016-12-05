@@ -105,6 +105,9 @@ using CryptoPP::CMAC;
 #include "assert.h"
 
 const int MAX_BUF = 500;
+const string FIN_STR = "FIN"; // These flags can be whatever we want them to be.
+const string SYN_STR = "SYN";
+const string RST_STR = "RST";
 extern RSA::PublicKey serverKey;
 
 void
@@ -115,5 +118,7 @@ recoverMsg( Socket& );
 
 int symWrite(CBC_Mode< AES >::Encryption, CMAC< AES >, Socket * sock, const char * buff, int len);
 int symRead(CBC_Mode< AES >::Decryption, CMAC< AES >, Socket * sock, char * buff, int len);
+void CheckFin( string );
+
 
 #endif /* CLIENTHELP_H_ */

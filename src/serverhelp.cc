@@ -7,6 +7,14 @@
 
 #include "serverhelp.h"
 
+/******************************************************************************
+ * FUNCTION:      RecoverMsg
+ * DESCRIPTION:   Recovers a Base64 encoded message from a client, decodes it,
+ * 				  and then decrypts it to recover the original message.
+ * PARAMETERS:    struct ThreadData* tdata - ThreadData structure
+ * RETURN:        string recovered - The decrypted and recovered message.
+ * NOTES:
+ *****************************************************************************/
 string RecoverMsg( struct ThreadData * tdata )
 {
    try
@@ -26,7 +34,7 @@ string RecoverMsg( struct ThreadData * tdata )
 
 	  cout << "Encoded Cipher Received: " << byteBuf << endl;
 
-	  decodedCipher;
+	  decodedCipher = "";
 	  StringSource(byteBuf, sizeof(byteBuf), true,
 		       new Base64Decoder(new StringSink(decodedCipher)));
 
@@ -56,6 +64,15 @@ string RecoverMsg( struct ThreadData * tdata )
    }
 }
 
+/******************************************************************************
+ * FUNCTION:      SendMsg
+ * DESCRIPTION:   Encrypt and Base64 encodes a string to send over a client
+ * 					socket connection.
+ * PARAMETERS:    string sendBuf- string to encode and encrypt
+ * 				  struct ThreadData* tdata - ThreadData structure
+ * RETURN:        None
+ * NOTES:
+ *****************************************************************************/
 void SendMsg( string sendBuf, struct ThreadData * tdata )
 {
    try
@@ -81,7 +98,7 @@ void SendMsg( string sendBuf, struct ThreadData * tdata )
 	  ss.clear();
 
 	  // Base64 encode the cipher
-	  encodedCipher;
+	  encodedCipher = "";
 	  StringSource(cipher, cipher.size(),
 		       new Base64Encoder(new StringSink(encodedCipher)));
 
@@ -102,17 +119,30 @@ void SendMsg( string sendBuf, struct ThreadData * tdata )
    }
 }
 
+/******************************************************************************
+ * FUNCTION:      symWrite
+ * DESCRIPTION:   Base64 encodes and encrypts a message using AES to send over
+ * 					socket connection.
+ * PARAMETERS:    CBC_Mode< AES >::Encryption eAES - symmetric AES key
+ * 				  CMAC< AES > cmac - Message Authentication key
+ * 				  Socket* socket - Pointer to client socket connection
+ * 				  const char* buff - Buffer containing data to write
+ * 				  int len - Length of the buffer
+ * RETURN:        int originalBytes - Number of bytes written when sending
+ * 					the encrypted message (not the MAC of the message)
+ * NOTES:
+ *****************************************************************************/
 int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
          const char * buff, int len )
 {
    string cipher = "";
    string encoded = "";
-   string mac;
-   size_t bytes, originalBytes;
+   string mac = "";
+   size_t bytes = 0,  originalBytes = 0;
    byte ack[ 10 ];
    memset(ack, 0, sizeof(ack));
 
-   StringSource s((const byte*) buff, len, true,
+   StringSource s((byte*) buff, len, true,
 	        new StreamTransformationFilter(eAES, new StringSink(cipher)) // StreamTransformationFilter
 	                 );// StringSource
 
@@ -126,7 +156,7 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
 
    sock->Receive(ack, sizeof(ack));
 
-   StringSource((const byte*) buff, len, true,
+   StringSource((byte*) buff, len, true,
 	        new HashFilter(cmac, new StringSink(mac)) // HashFilter
 	                 );// StringSource
 
@@ -142,6 +172,17 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
 
 }
 
+/******************************************************************************
+ * FUNCTION:      symRead
+ * DESCRIPTION:   Base64 decodes and decrypts a message using AES key.
+ * PARAMETERS:    CBC_Mode< AES >::Decryption dAES - AES decryption key
+ * 				  CMAC< AES > cmac - CMAC authentication key
+ * 				  Socket* sock - Pointer to client socket
+ * 				  char* buff - Buffer that holds recovered message
+ * 				  int len - Length of buff
+ * RETURN:        int recovered.length() - Length of the recovered message.
+ * NOTES:
+ *****************************************************************************/
 int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
          char * buff, int len )
 {
@@ -154,7 +195,7 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
 
    bytes = sock->Receive((byte*) buff, len);
 
-   StringSource((const byte *) buff, bytes, true,
+   StringSource((byte *) buff, bytes, true,
 	        new Base64Decoder(new StringSink(decoded)) // Base64Encoder
 	                 );// StringSource
 

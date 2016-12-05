@@ -9,10 +9,6 @@
 #include <fstream>
 using std::ifstream;
 
-const int BUDDIES = 15;
-const string FIN_STR = "FIN";
-const string SYN_STR = "SYN";
-const string RST_STR = "RST";
 struct ThreadData * tdata;
 Socket sockListen;
 Socket sockSource;
@@ -64,17 +60,10 @@ int main( int argc, char ** argv )
 
 	  AutoSeededRandomPool rng;
 	  RSA::PrivateKey privateKey;
-//	  privateKey.GenerateRandomWithKeySize(rng, 2048);
-//	  privateKey.Initialize(Integer(0x9dd403188c219481d10cba1c3f6af8a55b0e103bc4abb1e0f81391df5dd9307e8b5c75904296bacca0041dfc0795983cd5e9a0a0da2521554f250b9239f6ab90f1b13a1d5031fae2fc002a9030c18faa141c568d961c3ae67cd61d5040d78b01c808e9251963f2dbe459f158ab38e8614ee9f676d1be3cd94799f7edf1042f83734edac69c0fe2914153b26fb090a75f1b114b2a48462b2c03874aa93cea7f45562c4a3aa9f29bf1cb6af2a0056a346203e46536efa227dfeb92a7039ab4f6eedcfc30c6246360dd5980a7059435c1970196d6907d7dc37ebaf1755eecc733c6323c0a7137e8d93ae28dd8a02e8cfb9af08b0773dc5b3936c31a4d7cb9ed544f),
-//			   Integer(0x2e6b8870a1af8608104f098fd66ac19a0bb8d7991bba07240cba7632a321c2f80adef566aa2c550f01e317e0b6efc35d2fdb4d5c7c65460a083812764d488cd0471602089f1dc242c296a31b59a2576e422673cf4a4489cb51e49f35b8b7dd971cb753a17ff0385ecab10abfb9e38fa42644d004d44702d67e789436ec88c2adba390b9336e006efd6a0c32a6dc4b0a0dda2e053ca66ee92d5842ce57dc6f34375e29cda145c2fcec11becea6c898eb8c06d10575a524e5ca9672170eb37fe2b713780ddae93dcb778a3a3ff1de85267124fbd0d6689796a53551020cf26eecb11856ce74401b73cdfc016515458c8f6f89661313e32521562e3319150c00719),
-//			   Integer(0x11));
-	  RSA::PublicKey publicKey; //(privateKey);
-//	  publicKey.Initialize(Integer(0x9dd403188c219481d10cba1c3f6af8a55b0e103bc4abb1e0f81391df5dd9307e8b5c75904296bacca0041dfc0795983cd5e9a0a0da2521554f250b9239f6ab90f1b13a1d5031fae2fc002a9030c18faa141c568d961c3ae67cd61d5040d78b01c808e9251963f2dbe459f158ab38e8614ee9f676d1be3cd94799f7edf1042f83734edac69c0fe2914153b26fb090a75f1b114b2a48462b2c03874aa93cea7f45562c4a3aa9f29bf1cb6af2a0056a346203e46536efa227dfeb92a7039ab4f6eedcfc30c6246360dd5980a7059435c1970196d6907d7dc37ebaf1755eecc733c6323c0a7137e8d93ae28dd8a02e8cfb9af08b0773dc5b3936c31a4d7cb9ed544f),
-//			   Integer(0x2e6b8870a1af8608104f098fd66ac19a0bb8d7991bba07240cba7632a321c2f80adef566aa2c550f01e317e0b6efc35d2fdb4d5c7c65460a083812764d488cd0471602089f1dc242c296a31b59a2576e422673cf4a4489cb51e49f35b8b7dd971cb753a17ff0385ecab10abfb9e38fa42644d004d44702d67e789436ec88c2adba390b9336e006efd6a0c32a6dc4b0a0dda2e053ca66ee92d5842ce57dc6f34375e29cda145c2fcec11becea6c898eb8c06d10575a524e5ca9672170eb37fe2b713780ddae93dcb778a3a3ff1de85267124fbd0d6689796a53551020cf26eecb11856ce74401b73cdfc016515458c8f6f89661313e32521562e3319150c00719)
-//);
-//	  SavePrivateKey("rsa-private.key", privateKey);
-//	  SavePublicKey("rsa-public.key", publicKey);
+	  RSA::PublicKey publicKey;
 
+
+	  // Load the private and public keys
 	  LoadPrivateKey("rsa-private.key", privateKey);
 	  if ( !privateKey.Validate(rng, 3) )
 	  {
@@ -89,30 +78,22 @@ int main( int argc, char ** argv )
 		 return -1;
 	  }
 
-	  // Signer object
-	  RSASS< PSSR, SHA256 >::Signer signer(privateKey);
-
-	  // Create signature space
-	  size_t length = signer.MaxSignatureLength();
-	  SecByteBlock signature(length);
-
 	  // Read in the buddies from the buddies file.
 	  ifstream buddyfile("buddies.txt");
 	  if ( !buddyfile.is_open() )
 	  {
-		 cerr << "Failed to read in buddies" << endl;
-		 return -1;
-	  }
-
-	  ifstream dbfile("db.txt");
-	  if ( !dbfile.is_open() )
-	  {
-		 cerr << "Failed to read in buddies" << endl;
-		 return -1;
+		 throw(new Exception(Exception::IO_ERROR, "Failed to read buddies.txt"));
 	  }
 
 	  cout << "Reading content of buddy file" << endl;
-	  InitBuddies(buddyfile);
+	  	  InitBuddies(buddyfile);
+
+	  // Read client authentication database
+	  ifstream dbfile("db.txt");
+	  if ( !dbfile.is_open() )
+	  {
+		 throw(new Exception(Exception::IO_ERROR, "Failed to read db.txt"));
+	  }
 
 	  cout << "Reading content of client database" << endl;
 	  clientdb.InitClients(dbfile);
@@ -128,14 +109,12 @@ int main( int argc, char ** argv )
 		 tdata->clientlen = clientlen;
 		 tdata->sockListen = sockListen;
 		 tdata->sockSource = sockSource;
-		 tdata->signer = signer;
 		 tdata->privateKey = privateKey;
 
 		 rc = pthread_create(&clientThread, NULL, clientWorker, (void *) tdata);
 		 if ( rc )
 		 {
-			fprintf(stderr, "ERROR creating client thread : %d\n", rc);
-			return 1;
+			throw(new Exception(Exception::OTHER_ERROR, "Failed creating client thread"));
 		 }
 		 tcount++;
 	  }
@@ -191,7 +170,7 @@ void * clientWorker( void * in )
 	  if ( !fin )
 	  {
 		 cout << "Client did not authenticate" << endl;
-		 throw("Client did not authenticate");
+		 return (void*) -1;
 	  }
 	  else
 	  {
@@ -201,6 +180,7 @@ void * clientWorker( void * in )
 
    }
 
+   // Generate AES and CMAC keys
    AutoSeededRandomPool prng;
 
    SecByteBlock cmacKey(AES::DEFAULT_KEYLENGTH);
@@ -215,20 +195,17 @@ void * clientWorker( void * in )
    string plain;
    string mac, encoded;
 
-   /*********************************\
-   	\*********************************/
-
+   //Convert the keys into strings to send across the socket
    encoded.clear();
-   StringSource(aesKey.data(), aesKey.size(), true,
-	       new StringSink(encoded) // HexEncoder
-	                 );// StringSource
+   StringSource(aesKey.data(), aesKey.size(), true, new StringSink(encoded)
+	        );// StringSource
 
    // Send AES Key
    SendMsg(encoded, tdata);
 
    encoded.clear();
    encoded = "";
-   StringSource(iv, sizeof(iv), true, new StringSink(encoded) // HexEncoder
+   StringSource(iv, sizeof(iv), true, new StringSink(encoded)
 	        );// StringSource
 
    // Send IV
@@ -236,40 +213,63 @@ void * clientWorker( void * in )
 
    encoded.clear();
    encoded = "";
-   StringSource(cmacKey.data(), cmacKey.size(), true,
-	       new StringSink(encoded) // HexEncoder
-	                 );// StringSource
+   StringSource(cmacKey.data(), cmacKey.size(), true, new StringSink(encoded)
+	        );// StringSource
 
    // Send CMAC Key
    SendMsg(encoded, tdata);
 
-   try
+   // Define the Encryptors and Decryptors for AES
+   CBC_Mode< AES >::Encryption e;
+   CBC_Mode< AES >::Decryption d;
+   CMAC< AES > cmac(cmacKey, cmacKey.size());
+
+   e.SetKeyWithIV(aesKey, aesKey.size(), iv);
+   d.SetKeyWithIV(aesKey, aesKey.size(), iv);
+
+   char readBuff[ 1500 ];
+   char writeBuff[ 1500 ];
+   memset(readBuff, 0, sizeof(readBuff));
+   memset(writeBuff, 0, sizeof(writeBuff));
+   string send = "";
+
+   // Read BuddyList request and make sure it really was a buddylist request
+   size_t bytes = symRead(d, cmac, &(tdata->sockSource), readBuff,
+	        sizeof(readBuff));
+   cout << "Bytes read: " << bytes << endl;
+
+   if ( strcmp(readBuff, "GetBuddyList") == 0 )
    {
-	  CBC_Mode< AES >::Encryption e;
-	  CBC_Mode< AES >::Decryption d;
-	  CMAC< AES > cmac(cmacKey, cmacKey.size());
-
-	  e.SetKeyWithIV(aesKey, aesKey.size(), iv);
-	  d.SetKeyWithIV(aesKey, aesKey.size(), iv);
-
-	  char readBuff[1024];
-	  char writeBuff[1024];
-	  memset(readBuff, 0, sizeof(readBuff));
-	  memset(writeBuff, 0, sizeof(writeBuff));
-
-	  size_t bytes = symRead(d, cmac, &(tdata->sockSource), readBuff, sizeof(readBuff) );
-	  cout << "Bytes read: " << bytes << endl;
-
-	  if (strcmp(readBuff, "GetBuddyList") == 0)
-	  {
-		 cout << "Received the buddy list!" << endl;
-	  }
+	  cout << "Received the buddy list!" << endl;
    }
-   catch ( Exception& e )
+   else
    {
-	  throw(e);
+	  send = "FIN";
+	  cout << "Invalid buddylist request..." << endl;
+	   bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
+	   return (void*) -1;
    }
 
+   // Give the client their buddylist
+   send = "Here is your buddy list";
+   bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
+
+   // Read request to talk to another client.
+   memset(readBuff, 0, sizeof(readBuff));
+   bytes = bytes = symRead(d, cmac, &(tdata->sockSource), readBuff,
+	        sizeof(readBuff));
+
+   // Search for the client in their BuddyList
+   Buddy* buddy = buddylist.FindBuddy(readBuff);
+   if ( buddy == nullptr )
+   {
+	  send = "FIN";
+	  cout << "Could not find buddy in buddylist" << endl;
+	  bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
+	  return (void*) -1;
+   }
+
+   bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
    sockSource.ShutDown(SHUT_RDWR);
    return (void*) 0;
 }
@@ -333,14 +333,6 @@ bool authenticate( struct ThreadData * tdata )
 		 return false;
 	  }
 
-	  /*Buddy* buddy = buddylist.FindBuddy(uname);
-	   if ( buddy == nullptr )
-	   {
-	   sendBuf = "FIN";
-	   SendMsg(sendBuf, tdata);
-	   return false;
-	   }*/
-
 	  // Send Nonce and Salt
 	  nonce = Integer(rng, 64);
 	  ss << nonce << " " << salt;
@@ -379,6 +371,10 @@ bool authenticate( struct ThreadData * tdata )
 		 return false;
 	  }
 
+	  //Forget nonce and salt
+	  nonce = 0;
+	  salt = 0;
+
 	  return true;
    }
    catch ( CryptoPP::Exception& e )
@@ -389,6 +385,13 @@ bool authenticate( struct ThreadData * tdata )
    }
 }
 
+/******************************************************************************
+ * FUNCTION:      InitBuddies
+ * DESCRIPTION:   Read in the buddies.txt file.
+ * PARAMETERS:    ifstream& file - buddies.txt file
+ * RETURN:        None
+ * NOTES:
+ *****************************************************************************/
 void InitBuddies( ifstream& file )
 {
    string line, user, port;

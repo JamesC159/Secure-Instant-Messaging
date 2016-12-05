@@ -113,11 +113,14 @@ using std::runtime_error;
 #include "assert.h"
 
 const int MAX_BUF = 500;
+const int BUDDIES = 15;
+const string FIN_STR = "FIN";
+const string SYN_STR = "SYN";
+const string RST_STR = "RST";
 
 struct ThreadData
 {
    int tid; // Thread ID.
-   RSASS<PSSR, SHA256>::Signer signer;
    RSA::PrivateKey privateKey;
    Socket sockListen;
    Socket sockSource;

@@ -150,7 +150,7 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
 {
    string decoded = "", recovered = "", ack = "", recoveredPlusTemp = "";
    size_t bytes = 0;
-   char * tempBuf[ 1024 ];
+   char tempBuf[ 1024 ];
    memset(tempBuf, 0, sizeof(tempBuf));
    const int flags = HashVerificationFilter::THROW_EXCEPTION
 	        | HashVerificationFilter::HASH_AT_END;
@@ -180,7 +180,7 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
 
    recoveredPlusTemp = recovered + decoded;
 
-   StringSource(decoded, true, new HashVerificationFilter(cmac, NULL, flags)); // StringSource
+   StringSource(recoveredPlusTemp, true, new HashVerificationFilter(cmac, NULL, flags)); // StringSource
 
    cout << "Verified message" << endl;
 

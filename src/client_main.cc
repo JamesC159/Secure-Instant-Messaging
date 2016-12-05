@@ -23,9 +23,6 @@ using std::stringstream;
 #include <stdexcept>
 using std::runtime_error;
 
-const string FIN_STR = "FIN"; // These flags can be whatever we want them to be.
-const string SYN_STR = "SYN";
-const string RST_STR = "RST";
 Socket sockServer;
 
 void ParseNonceSalt( Integer&, Integer&, stringstream& );
@@ -94,17 +91,9 @@ int main( int argc, char ** argv )
 	  sendMsg(sockServer, sendBuf);
 	  recovered = recoverMsg(sockServer);
 
-	  // Make sure the server did not reply with connection teardown info
-	  if ( recovered.compare(FIN_STR) == 0 )
-	  {
-		 cout << "Since receiving the FIN from server, we are exiting" << endl;
-		 sockServer.ShutDown(SHUT_RDWR);
-		 return -1;
-	  }
-
 	  //Parse nonce and salt reply
 	  stringstream ss(recovered);
-	  Integer nonce, salt;
+	  Integer nonce = 0, salt = 0;
 	  ParseNonceSalt(nonce, salt, ss);
 	  ss.str("");
 	  ss.clear();
@@ -141,11 +130,14 @@ int main( int argc, char ** argv )
 
 	  // Convert username, digest, and nonce to string and send
 	  ss << uname << "~" << encoded << "~" << nonce;
-//	  cout << "Final String to be Sent: " << ss.str() << endl;
 	  sendBuf = ss.str();
 	  ss.str("");
 	  ss.clear();
 	  sendMsg(sockServer, sendBuf);
+
+	  // Forget the nonce and salt;
+	  nonce = 0;
+	  salt = 0;
 
 	  //Get shared key from server
 	  string aes_str = recoverMsg(sockServer);
@@ -169,8 +161,6 @@ int main( int argc, char ** argv )
 	  ArraySource((const byte*) cmac_str.c_str(), cmac_str.size(), true,
 		       new ArraySink(cmac_key, sizeof(cmac_key)));
 
-	  try
-	  {
 		 CBC_Mode< AES >::Encryption e;
 		 CBC_Mode< AES >::Decryption d;
 		 CMAC< AES > cmac(cmac_key, cmac_key.size());
@@ -181,15 +171,28 @@ int main( int argc, char ** argv )
 		 // The StreamTransformationFilter removes
 		 //  padding as required.
 		 string plain = "GetBuddyList";
+		 char readBuff[ 1500 ];
+
+		 // Send request for buddy list and read the buddy list
+		 symWrite(e, cmac, &sockServer, plain.c_str(), plain.length());
+
+		 // Read client's buddy list
+		 symRead(d, cmac, &sockServer, readBuff, sizeof(readBuff));
+
+		 cout << "Buddy List: " << readBuff << endl;
+
+		 plain = "";
+		 cout << "Who would you like to talk to?: ";
+		 if ( !getline(cin, plain) )
+		 {
+			throw(new Exception(Exception::IO_ERROR,
+			         "Failed to get client request from user."));
+		 }
 
 		 symWrite(e, cmac, &sockServer, plain.c_str(), plain.length());
-	  }
-	  catch ( const CryptoPP::Exception& e )
-	  {
-		 cerr << e.what() << endl;
-		 sockServer.ShutDown(SHUT_RDWR);
-		 exit(1);
-	  }
+
+		 memset(readBuff, 0, sizeof(readBuff));
+		 symRead(d, cmac, &sockServer, readBuff, sizeof(readBuff));
 
 	  sockServer.ShutDown(SHUT_RDWR);
    }
