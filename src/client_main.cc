@@ -194,6 +194,56 @@ int main( int argc, char ** argv )
 		 memset(readBuff, 0, sizeof(readBuff));
 		 symRead(d, cmac, &sockServer, readBuff, sizeof(readBuff));
 
+		 cout << "Are you server?: ";
+		 string isServer;
+		 if ( !getline(cin, ip) )
+		 {
+			throw(new Exception(Exception::IO_ERROR,
+			         "Failed to get client request from user."));
+		 }
+
+		 if (isServer == "y")
+		 {
+		 cout << "What port?: ";
+                 string port;
+		 if ( !getline(cin, port) )
+		 {
+			throw(new Exception(Exception::IO_ERROR,
+			         "Failed to get client request from user."));
+		 }
+		 Socket dummySock;
+		 Socket dummyServer;
+		 dummySock.Create();
+		 dummyServer.Create();
+		 dummyServer.Bind(atoi(port.c_str()));
+		 dummyServer.Listen();
+		 dummyServer.Accept(dummySock, (sockaddr *) NULL, (socklen_t *) NULL);
+		 startTalking(e, d, cmac, dummySock);
+		 }
+		 else
+		 {
+                 cout << "What IP would you like to talk to?: ";
+		 string ip;
+		 if ( !getline(cin, ip) )
+		 {
+			throw(new Exception(Exception::IO_ERROR,
+			         "Failed to get client request from user."));
+		 }
+
+                 cout << "What port would you like to talk to?: ";
+		 string port;
+		 if ( !getline(cin, port) )
+		 {
+			throw(new Exception(Exception::IO_ERROR,
+			         "Failed to get client request from user."));
+		 }
+
+		 Socket dummySock;
+		 dummySock.Create();
+		 dummySock.Connect(ip, atoi(port.c_str()));
+		 startTalking(e, d, cmac, &dummySock);
+		 }
+
 	  sockServer.ShutDown(SHUT_RDWR);
    }
    catch ( Exception& e )

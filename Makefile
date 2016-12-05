@@ -9,7 +9,7 @@ LDIR = lib/
 SERVER_OBJS = $(addprefix ${SDIR}${OBJDIR}, serverhelp.o \
 					Buddy.o ClientDB.o BuddyList.o networking.o server_main.o)
 CLIENT_OBJS = $(addprefix ${SDIR}${OBJDIR}, clienthelp.o \
-					Buddy.o BuddyList.o networking.o client_main.o)
+					Buddy.o BuddyList.o networking.o client_main.o clientapp.o getch.o)
 
 CFLAGS = -Wall -g -std=c++11
 LDFLAGS=
