@@ -28,7 +28,7 @@ void startTalking(Socket *sock)
       }
       if (c == '\n')
       {
-	 swrite(sock, ss.str().c_str(), charsRead);
+	 sWrite(sock, ss.str().c_str(), charsRead);
 	 printf("\r%s\r", std::string(charsRead, ' ').c_str());
 	 printf("%s: %s\n", ownName.c_str(), ss.str().c_str());
 	 if (ss.str() == "EXIT")
@@ -59,7 +59,7 @@ void sockListener(Socket *sock)
    memset(buff, '\0', sizeof(buff));
    while (true)
    {
-      int cRead = sread(sock, buff, sizeof(buff)-1);
+      int cRead = sRead(sock, buff, sizeof(buff)-1);
       if (cRead > 0)
       {
          buff[cRead] = '\0';
@@ -70,7 +70,7 @@ void sockListener(Socket *sock)
 	 {
 	    if (!done)
 	    {
-	       swrite(sock, buff, strlen(buff));
+	       sWrite(sock, buff, strlen(buff));
 	       printf("Session has ended, press a key to continue...");
 	       done = true;
 	    }
