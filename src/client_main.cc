@@ -194,6 +194,7 @@ int main( int argc, char ** argv )
 
 		 // Pretty print
 		 encoded.clear();
+		 encoded = "";
 		 StringSource(cipher, true, new HexEncoder(new StringSink(encoded)) // HexEncoder
 			      );// StringSource
 
@@ -209,6 +210,7 @@ int main( int argc, char ** argv )
 
 		 // Pretty print
 		 encoded.clear();
+		 encoded = "";
 		 StringSource(mac, true, new HexEncoder(new StringSink(encoded)) // HexEncoder
 			      );// StringSource
 

@@ -267,16 +267,18 @@ void * clientWorker( void * in )
 	  e.SetKeyWithIV(aesKey, aesKey.size(), iv);
 	  d.SetKeyWithIV(aesKey, aesKey.size(), iv);
 
-	  string cipher = RecoverMsg(tdata);
-	  string mac = RecoverMsg(tdata);
 	  string decodedCipher;
 	  string decodedMac;
 	  string recoveredCipher;
 	  string recoveredMac;
 
+	  string cipher = RecoverMsg(tdata);
+
 	  cout << "Cipher Received: " << cipher << endl;
 
 	  StringSource(cipher, true, new HexDecoder(new StringSink(decodedCipher)));
+
+	  string mac = RecoverMsg(tdata);
 
 	  cout << "MAC Received: " << mac << endl;
 
@@ -285,13 +287,15 @@ void * clientWorker( void * in )
 	  // The StreamTransformationFilter removes
 	  //  padding as required.
 	  StringSource s(decodedCipher, true,
-		       new StreamTransformationFilter(d, new StringSink(recoveredCipher)) // StreamTransformationFilter
-		                );// StringSource
+		       new StreamTransformationFilter(d,
+		                new StringSink(recoveredCipher)) // StreamTransformationFilter
+		                         );// StringSource
 
 	  cout << "Recovered: " << recoveredCipher << endl;
 
-	  StringSource(recoveredCipher, true, new HashFilter(cmac, new StringSink(recoveredMac)) // HashFilter
-	  			      );// StringSource
+	  StringSource(recoveredCipher, true,
+		       new HashFilter(cmac, new StringSink(recoveredMac)) // HashFilter
+		                );// StringSource
 
 	  // Tamper with message
 //	  				plain[0] ^= 0x01;

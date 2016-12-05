@@ -58,6 +58,11 @@ using CryptoPP::SHA256;
 using CryptoPP::HexEncoder;
 using CryptoPP::HexDecoder;
 
+#include <cryptopp/base64.h>
+using CryptoPP::Base64Encoder;
+using CryptoPP::Base64Decoder;
+
+
 #include "cryptopp/ccm.h"
 using CryptoPP::CBC_Mode;
 

@@ -16,26 +16,24 @@ string recoverMsg( Socket& sockServer )
    {
 	  string recovered = "";
 	  AutoSeededRandomPool rng;
-	  byte byteBuf[ 1000 ];
+	  byte byteBuf[ 10000 ];
 	  string recBuf;
 	  stringstream ss;
 	  Integer c, r, m;
+	  memset(byteBuf, 0, sizeof(byteBuf));
 
 	  // Retrieve message from socket
 	  cout << "Waiting for reply from server..." << endl;
 
 	  size_t bytes = sockServer.Receive(byteBuf, sizeof(byteBuf));
+	  cout << "Bytes Read: " << bytes << endl;
 
-	  ss << byteBuf;
-	  recBuf = ss.str();
+	  cout << "Encoded Cipher Received: " << byteBuf << endl;
 
-	  // Retrieve message from socket
-//	  RSAES_OAEP_SHA_Decryptor d(tdata->privateKey);
-//	  tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
+	  string decodedCipher;
+	  	  StringSource(byteBuf, sizeof(byteBuf), true, new Base64Decoder(new StringSink(decodedCipher)));
 
-//Convert message to a string
-
-	  c = Integer(recBuf.c_str());
+	  	  c = Integer(decodedCipher.c_str());
 
 	  // Decrypt
 	  r = serverKey.ApplyFunction(c);
@@ -45,8 +43,7 @@ string recoverMsg( Socket& sockServer )
 	  size_t req = r.MinEncodedSize();
 	  recovered.resize(req);
 	  r.Encode((byte *) recovered.data(), recovered.size());
-
-	  //cout << "recovered: " << recovered << endl;
+	  cout << "Recovered: " << recovered << endl;
 	  return recovered;
    }
    catch ( Exception& e )
@@ -77,7 +74,15 @@ void sendMsg( Socket& sockServer, string sendBuf )
 	  ss.str("");
 	  ss.clear();
 
-	  sockServer.Send((const byte*) cipher.c_str(), cipher.size());
+	  string encodedCipher;
+	  	  	  StringSource(cipher, cipher.size(), new Base64Encoder(new StringSink(encodedCipher)));
+
+	  	  	cout << "Encoded Cipher Sent: " << encodedCipher << endl;
+
+
+	  size_t bytes = sockServer.Send((const byte*) encodedCipher.c_str(), encodedCipher.size());
+	  cout << "Bytes Written: " << bytes << endl;
+	  sleep(2);
 
    }
    catch ( Exception& e )

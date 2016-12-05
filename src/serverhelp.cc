@@ -16,7 +16,8 @@ string RecoverMsg( struct ThreadData * tdata )
 	  Integer c, r, m;
 	  AutoSeededRandomPool rng;
 	  string recovered;
-	  byte byteBuf[ 1000 ];
+	  byte byteBuf[ 10000 ];
+	  memset(byteBuf, 0, sizeof(byteBuf));
 
 	  // Retrieve message from socket
 	  cout << "Waiting to receive a message from client " << tdata->tid << endl;
@@ -24,10 +25,14 @@ string RecoverMsg( struct ThreadData * tdata )
 //	  RSAES_OAEP_SHA_Decryptor d(tdata->privateKey);
 
 	  size_t bytes = tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
+	  cout << "Bytes Read: " << bytes << endl;
 
-	  ss << byteBuf;
-	  recBuf = ss.str();
-	  c = Integer(recBuf.c_str());
+	  cout << "Encoded Cipher Received: " << byteBuf << endl;
+
+	  string decodedCipher;
+	  StringSource(byteBuf, sizeof(byteBuf), true, new Base64Decoder(new StringSink(decodedCipher)));
+
+	  c = Integer(decodedCipher.c_str());
 
 	  // Decrypt
 	  r = tdata->privateKey.CalculateInverse(rng, c);
@@ -38,7 +43,9 @@ string RecoverMsg( struct ThreadData * tdata )
 	  recovered.resize(req);
 	  r.Encode((byte *) recovered.data(), recovered.size());
 
-	  cout << "recovered: " << recovered << endl;
+	  cout << "Recovered: " << recovered << endl;
+
+//	  cout << "recovered: " << recovered << endl;
 	  return recovered;
    }
    catch ( Exception& e )
@@ -63,13 +70,21 @@ void SendMsg( string sendBuf, struct ThreadData * tdata )
 
 	  	  // Encrypt
 	  	  c = tdata->privateKey.CalculateInverse(rng, m);
+
 	  	  ss << c;
 	  	  string cipher = ss.str();
 	  	  ss.str("");
 	  	  ss.clear();
 
-	  size_t bytes = tdata->sockSource.Send((const byte*)cipher.c_str(), cipher.size());
+	  	  string encodedCipher;
+	  	  StringSource(cipher, cipher.size(), new Base64Encoder(new StringSink(encodedCipher)));
+
+	  	cout << "Encoded Cipher Sent: " << encodedCipher << endl;
+
+	  size_t bytes = tdata->sockSource.Send((const byte*)encodedCipher.c_str(), encodedCipher.size());
 	  cout << "Bytes Written: " << bytes << endl;
+
+	  sleep(2);
    }
    catch ( Exception& e )
    {
