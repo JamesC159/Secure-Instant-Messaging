@@ -11,6 +11,11 @@ std::mutex screenLock;
 
 void startTalking(Socket *sock)
 {
+   symWrite(sock, ownName.c_str(), ownName.length());
+   char buff [32];
+   memset(buff, '\0', sizeof(buff));
+   symRead(sock, buff, sizeof(buff));
+   otherName = buff;
    done = false;
    charsRead = 0;
    ss.str("");

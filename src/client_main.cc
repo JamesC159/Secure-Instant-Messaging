@@ -87,6 +87,7 @@ int main( int argc, char ** argv )
 	  }
 
 	  uname = sendBuf;	// Store username
+	  ownName = uname;
 
 //	  cout << "Enter your password: ";
 //	  if ( !getline(cin, sendBuf) )
@@ -291,8 +292,6 @@ int main( int argc, char ** argv )
          sockServer.Listen();
          sockaddr_in cliAddr;
          int cliLen;
-	 ownName = "Tom";
-	 otherName = "Steve";
          sockServer.Accept(cliSock, (sockaddr *) &cliAddr, (socklen_t *) &cliLen);
          startTalking(&cliSock);
          sockServer.ShutDown(SHUT_RDWR);
@@ -301,8 +300,6 @@ int main( int argc, char ** argv )
       {
          cliSock.Create();
 	 cliSock.Connect(argv[2], atoi(argv[3]));
-	 ownName = "Steve";
-	 otherName = "Tom";
 	 startTalking(&cliSock);
       }
    }
