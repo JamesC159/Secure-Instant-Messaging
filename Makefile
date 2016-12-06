@@ -25,9 +25,6 @@ ${SDIR}${OBJDIR}%.o: ${SDIR}%.cc
 	${CC} ${CFLAGS} ${INCLUDES} -c $< -o $@
 	
 ${SDIR}%.cc: ${IDIR}%.h
-	@echo "Compiling source file..."
-	${CC} ${CFLAGS} ${INCLUDES} -c $@
-	mv *.o ${SDIR}${OBJDIR}
 
 all: ${SERVER_DRIVER} ${CLIENT_DRIVER}
 

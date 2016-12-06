@@ -98,8 +98,11 @@ extern std::string ownName;
 extern std::string otherName;
 extern Socket connectedSock;
 
+extern CBC_Mode < AES >::Encryption commonE;
+extern CBC_Mode < AES >::Decryption commonD;
+extern CMAC< AES > commonCmac;
 
-void incomingRequestHandler();
+void incomingRequestHandler(CBC_Mode< AES >::Decryption dAES);
 void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock);
 
 void startTalking(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock);

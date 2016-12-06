@@ -299,7 +299,7 @@ void * clientWorker( void * in )
    {
 	  if ( buddy.compare(readBuff) == 0 )
 	  {
-
+                 stringstream ssb("");
 		 ss.str("");
 		 ss.clear();
 
@@ -327,11 +327,15 @@ void * clientWorker( void * in )
 
 		 string mac, encoded;
 
+                 ssb << tdata->clientName << " ";
+                 ss << requestedClient->username << " " << requestedClient->ip << " " << requestedClient->port << " ";
+
 		 //Convert the keys into strings to send across the socket
 		 encoded.clear();
 		 StringSource(sharedAES.data(), sharedAES.size(), true,
 			      new Base64Encoder(new StringSink(encoded))); // StringSource
 
+		 ssb << encoded << " ";
 		 ss << encoded << " ";
 
 		 encoded.clear();
@@ -339,6 +343,7 @@ void * clientWorker( void * in )
 		 StringSource(sharedIV, sizeof(sharedIV), true,
 			      new Base64Encoder(new StringSink(encoded))); // StringSource
 
+		 ssb << encoded << " ";
 		 ss << encoded << " ";
 
 		 encoded.clear();
@@ -346,25 +351,22 @@ void * clientWorker( void * in )
 		 StringSource(sharedCMAC.data(), sharedCMAC.size(), true,
 			      new Base64Encoder(new StringSink(encoded))); // StringSource
 
-		 send = "";
-		 ss << encoded;
-		 send += ss.str();
-		 send += " ";
-		 send += tdata->clientName;
-		 send += " ";
+		 string ticket = "";
+		 ssb << encoded;
+		 ss << encoded << " ";
+                 ticket = ssb.str();
 
 		 // Encrypt ClientB's ticket
 		 string cipher = "";
 		 CBC_Mode< AES >::Encryption enc = requestedClient->GetEnc();
-		 StringSource s(send, send.size(),
-		 	        new StreamTransformationFilter(enc, new StringSink(cipher)) // StreamTransformationFilter
+		 StringSource s(ticket, true,
+		 	        new StreamTransformationFilter(enc, new Base64Encoder(new StringSink(cipher))) // StreamTransformationFilter
 		 	                 );// StringSource
 
-		 send += cipher;
-		 string sink;
-		 StringSource(send, send.size(), new Base64Encoder(new StringSink(sink)));
+                 ss << cipher;
+                 string sink = ss.str();
 
-		 // Send AES, CMAC, and IV
+		 // Send Connect reply to A
 		 symWrite(e, cmac, &(tdata->sockSource), sink.c_str(), sink.length());
 
 		 found = true;
