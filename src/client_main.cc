@@ -3,6 +3,8 @@
 #include <clientapp.h>
 #include <csignal>
 #include <errno.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include <iostream>
 using std::cout;
@@ -25,6 +27,7 @@ using std::stringstream;
 using std::runtime_error;
 
 Socket sockServer;
+Socket incSock;
 
 void ParseNonceSalt( Integer&, Integer&, stringstream& );
 
@@ -63,6 +66,13 @@ int main( int argc, char ** argv )
 	  }
 
 	  RSASS< PSSR, SHA256 >::Verifier verifier(serverKey);
+          incSock.Create();
+          incSock.Bind(0);
+          sockaddr_in locAddr;
+          int locAddrLen = sizeof(locAddr);
+          incSock.GetSockName((sockaddr *) &locAddr, (socklen_t *) &locAddrLen);
+          int locPort = ntohs(locAddr.sin_port);
+          cout << "Bound to port: " << locPort << endl;
 
 	  sockServer.Create();
 	  sockServer.Connect("localhost", port);
