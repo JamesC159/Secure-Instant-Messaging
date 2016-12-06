@@ -9,6 +9,9 @@ using std::make_pair;
 #include <unordered_map>
 using std::unordered_map;
 
+#include "cryptopp/cmac.h"
+using CryptoPP::CMAC;
+
 #include <string>
 using std::string;
 
@@ -16,6 +19,7 @@ class BuddyList
 {
 private:
    unordered_map< string, Buddy* > buddies;
+
 
 public:
    BuddyList()
