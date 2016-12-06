@@ -2,6 +2,7 @@
 #include <clienthelp.h>
 
 
+Socket connectedSock;
 std::string ownName;
 std::string otherName;
 bool done;
@@ -10,11 +11,6 @@ std::stringstream ss;
 std::mutex screenLock;
 
 
-void incomingRequestHandler()
-{
-   incSock.Listen();
-
-}
 
 void startTalking(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket *sock)
 {
@@ -101,6 +97,8 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
 {
    char readBuff [1024];
    done = false;
+   connectedSock.Create();
+   std::thread lthread(incomingRequestHandler);
    charsRead = strlen("Who would you like to talk to?: ");
    ss.str("Who would you like to talk to?: ");
    cout << "Who would you like to talk to?: ";
@@ -128,5 +126,29 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
       }
       screenLock.unlock();
    }
+   screenLock.unlock();
+   lthread.join();
+}
+
+void incomingRequestHandler()
+{
+   Socket dummySock;
+   struct timeval timeout;
+   timeout.tv_sec = 1;
+   dummySock.Create();
+   incSock.Listen();
+   while(!done && !incSock.ReceiveReady(&timeout));
+   screenLock.lock();
+   if (done)
+   {
+      screenLock.unlock();
+      return;
+   }
+   done = true;
+   incSock.Accept(dummySock, (sockaddr *) NULL, (socklen_t *) NULL);
+   connectedSock = dummySock;
+   //other stuff needed to connect
+   printf("\r%s\r", std::string(charsRead, ' ').c_str());
+   printf("Other client has connected, press a key to continue...");
    screenLock.unlock();
 }

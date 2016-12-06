@@ -200,80 +200,9 @@ int main( int argc, char ** argv )
 		 buddylist.AddBuddy(buddy, 0);
 	  }
 
-	  plain = "";
-	  cout << "Who would you like to talk to?: ";
-	  if ( !getline(cin, plain) )
-	  {
-		 throw(new Exception(Exception::IO_ERROR,
-			      "Failed to get client request from user."));
-	  }
 
-	  symWrite(e, cmac, &sockServer, plain.c_str(), plain.length());
-
-	  memset(readBuff, 0, sizeof(readBuff));
-	  symRead(d, cmac, &sockServer, readBuff, sizeof(readBuff));
-
-	  cout << "Are you server?: ";
-	  string isServer;
-	  if ( !getline(cin, isServer) )
-	  {
-		 throw(new Exception(Exception::IO_ERROR,
-			      "Failed to get client request from user."));
-	  }
-
-	  if ( isServer == "y" )
-	  {
-		 cout << "What port?: ";
-		 string port;
-		 if ( !getline(cin, port) )
-		 {
-			throw(new Exception(Exception::IO_ERROR,
-			         "Failed to get client request from user."));
-		 }
-		 Socket dummySock;
-		 Socket dummyServer;
-		 dummySock.Create();
-		 dummyServer.Create();
-		 dummyServer.Bind(atoi(port.c_str()));
-		 dummyServer.Listen();
-		 dummyServer.Accept(dummySock, (sockaddr *) NULL, (socklen_t *) NULL);
-		 char buff[ 32 ];
-		 memset(buff, '\0', sizeof(buff));
-		 symRead(d, cmac, &dummySock, buff, sizeof(buff));
-		 otherName = buff;
-		 symWrite(e, cmac, &dummySock, ownName.c_str(), ownName.length());
-
-		 startTalking(e, d, cmac, &dummySock);
-	  }
-	  else
-	  {
-		 cout << "What IP would you like to talk to?: ";
-		 string ip;
-		 if ( !getline(cin, ip) )
-		 {
-			throw(new Exception(Exception::IO_ERROR,
-			         "Failed to get client request from user."));
-		 }
-
-		 cout << "What port would you like to talk to?: ";
-		 string port;
-		 if ( !getline(cin, port) )
-		 {
-			throw(new Exception(Exception::IO_ERROR,
-			         "Failed to get client request from user."));
-		 }
-
-		 Socket dummySock;
-		 dummySock.Create();
-		 dummySock.Connect(ip.c_str(), atoi(port.c_str()));
-		 symWrite(e, cmac, &dummySock, ownName.c_str(), ownName.length());
-		 char buff[ 32 ];
-		 memset(buff, '\0', sizeof(buff));
-		 symRead(d, cmac, &dummySock, buff, sizeof(buff));
-		 otherName = buff;
-		 startTalking(e, d, cmac, &dummySock);
-	  }
-
+          connReqHdlr(e, d, cmac, &sockServer);
+          startTalking(e, d, cmac, &connectedSock);
 	  sockServer.ShutDown(SHUT_RDWR);
    }
    catch ( Exception& e )

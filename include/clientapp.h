@@ -96,6 +96,7 @@ using CryptoPP::CMAC;
 
 extern std::string ownName;
 extern std::string otherName;
+extern Socket connectedSock;
 
 
 void incomingRequestHandler();
