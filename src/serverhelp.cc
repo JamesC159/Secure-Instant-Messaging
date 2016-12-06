@@ -23,14 +23,14 @@ string RecoverMsg( struct ThreadData * tdata )
 	  size_t req = 0, bytes = 0;
 	  AutoSeededRandomPool rng;
 	  string recovered = "", ack = "", decodedCipher = "";
-	  byte byteBuf[ 2000 ];
+	  byte * byteBuf;
 	  memset(byteBuf, 0, sizeof(byteBuf));
 
 	  // Retrieve message from socket
 	  cout << "Waiting to receive a message from client " << tdata->tid << endl;
           int recieveLen;
-          sock->Recieve((byte*) recieveLen, sizeof(int));
-          byteBuf = new char [recieveLen+1];
+          tdata->sockSource.Receive((byte*) &recieveLen, sizeof(int));
+          byteBuf = new byte [recieveLen+1];
           memset(byteBuf, 0, recieveLen+1);
 
 	  bytes = tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
@@ -83,8 +83,6 @@ void SendMsg( string sendBuf, struct ThreadData * tdata )
 	  string cipher = "", encodedCipher = "";
 	  Integer m = 0, c = 0, r = 0;
 	  size_t bytes = 0;
-	  byte ack[ 10 ];
-	  memset(ack, 0, sizeof(ack));
 
 	  // Treat the message as a big endian array
 	  m = Integer((const byte *) sendBuf.c_str(), sendBuf.size());
@@ -104,9 +102,9 @@ void SendMsg( string sendBuf, struct ThreadData * tdata )
 		       new Base64Encoder(new StringSink(encodedCipher)));
 
 	  cout << "Encoded Cipher Sent: " << encodedCipher << endl;
-          int sendLen = encondedCipher.size();
+          int sendLen = encodedCipher.size();
 
-          sock->Send((const byte*) sendLen, sizeof(int));
+          tdata->sockSource.Send((const byte*) &sendLen, sizeof(int));
 	  // Send the cipher
 	  bytes = tdata->sockSource.Send((const byte*) encodedCipher.c_str(),
 		       encodedCipher.size());
@@ -198,7 +196,7 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
 	        | HashVerificationFilter::HASH_AT_END;
 
    int recieveLen;
-   sock->Recieve((byte*) recieveLen, sizeof(int));
+   sock->Receive((byte*) recieveLen, sizeof(int));
    tempBuf = new char [recieveLen+1];
    memset(tempBuf, 0, recieveLen+1);
    bytes = sock->Receive((byte*) tempBuf, len);

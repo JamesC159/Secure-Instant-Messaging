@@ -16,10 +16,14 @@ string recoverMsg( Socket& sockServer )
    {
 	  string recovered = "", decodedCipher = "", ack = "";
 	  AutoSeededRandomPool rng;
-	  byte byteBuf[ 2000 ];
+	  byte * byteBuf;
 	  Integer c = 0, r = 0, m = 0;
 	  size_t bytes = 0, req = 0;
-	  memset(byteBuf, 0, sizeof(byteBuf));
+          int recieveLen;
+          sock->Receive((byte*) &recieveLen, sizeof(int));
+          byteBuf = new byte [recieveLen+1];
+          memset(byteBuf, 0, recieveLen+1);
+          bytes = sockServer.Receive((byte*) tempBuf, len);
 
 	  // Retrieve message from socket
 	  cout << "Waiting for reply from server..." << endl;
@@ -44,10 +48,6 @@ string recoverMsg( Socket& sockServer )
 	  r.Encode((byte *) recovered.data(), recovered.size());
 	  cout << "Recovered: " << recovered << endl;
 
-	  ack = "ACK";
-	  bytes = sockServer.Send((const byte*) ack.c_str(),
-	  		       ack.size());
-
 	  return recovered;
    }
    catch ( Exception& e )
@@ -68,8 +68,6 @@ void sendMsg( Socket& sockServer, string sendBuf )
 	  string cipher = "", encodedCipher = "";
 	  Integer m = 0, c = 0, r = 0;
 	  size_t bytes = 0;
-	  byte ack[10];
-	  memset(ack, 0, sizeof(ack));
 
 	  // Treat the message as a big endian array
 	  m = Integer((const byte *) sendBuf.c_str(), sendBuf.size());
@@ -88,15 +86,14 @@ void sendMsg( Socket& sockServer, string sendBuf )
 
 	  cout << "Encoded Cipher Sent: " << encodedCipher << endl;
 
+	  int sendSize - encodedCipher.size();
+	  sockServer.Send((const byte *) &sendSize, sizeof(int));
+
 	  // Send Encoded cipher
 	  bytes = sockServer.Send((const byte*) encodedCipher.c_str(),
 		       encodedCipher.size());
 
 	  cout << "Bytes Written: " << bytes << endl;
-
-	  // Get acknowledgement, just for sync purposes
-	  bytes = sockServer.Receive(ack, sizeof(ack));
-
    }
    catch ( Exception& e )
    {
