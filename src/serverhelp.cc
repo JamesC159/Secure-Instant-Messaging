@@ -28,6 +28,10 @@ string RecoverMsg( struct ThreadData * tdata )
 
 	  // Retrieve message from socket
 	  cout << "Waiting to receive a message from client " << tdata->tid << endl;
+          int recieveLen;
+          sock->Recieve((byte*) recieveLen, sizeof(int));
+          byteBuf = new char [recieveLen+1];
+          memset(byteBuf, 0, recieveLen+1);
 
 	  bytes = tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
 	  cout << "Bytes Read: " << bytes << endl;
@@ -50,9 +54,6 @@ string RecoverMsg( struct ThreadData * tdata )
 	  r.Encode((byte *) recovered.data(), recovered.size());
 
 	  cout << "Recovered: " << recovered << endl;
-
-	  ack = "ACK";
-	  bytes = tdata->sockSource.Send((const byte*) ack.c_str(), ack.size());
 
 	  return recovered;
    }
@@ -103,13 +104,13 @@ void SendMsg( string sendBuf, struct ThreadData * tdata )
 		       new Base64Encoder(new StringSink(encodedCipher)));
 
 	  cout << "Encoded Cipher Sent: " << encodedCipher << endl;
+          int sendLen = encondedCipher.size();
 
+          sock->Send((const byte*) sendLen, sizeof(int));
 	  // Send the cipher
 	  bytes = tdata->sockSource.Send((const byte*) encodedCipher.c_str(),
 		       encodedCipher.size());
 	  cout << "Bytes Written: " << bytes << endl;
-
-	  bytes = tdata->sockSource.Receive(ack, sizeof(ack));
    }
    catch ( Exception& e )
    {
@@ -137,12 +138,10 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
 {
    string cipher = "";
    string encoded = "";
-   string mac = "";
-   size_t bytes = 0,  originalBytes = 0;
-   byte ack[ 10 ];
-   memset(ack, 0, sizeof(ack));
+   string mac;
+   size_t bytes, originalBytes;
 
-   StringSource s((byte*) buff, len, true,
+   StringSource s((const byte*)buff, len, true,
 	        new StreamTransformationFilter(eAES, new StringSink(cipher)) // StreamTransformationFilter
 	                 );// StringSource
 
@@ -152,19 +151,24 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
    // Send Cipher with CMAC to Server (Request for BuddyList)
    cout << "Symmetric Cipher: " << encoded << endl;
 
+   int sendLen = enconded.size();
+
+   sock->Send((const byte*) sendLen, sizeof(int));
+
    originalBytes = sock->Send((const byte*) encoded.c_str(), encoded.size());
 
-   sock->Receive(ack, sizeof(ack));
-
-   StringSource((byte*) buff, len, true,
-	        new HashFilter(cmac, new StringSink(mac)) // HashFilter
-	                 );// StringSource
+   StringSource((const byte*)buff, len, true, new HashFilter(cmac, new StringSink(mac)) // HashFilter
+	        );// StringSource
 
    encoded = "";
    StringSource(mac, true, new Base64Encoder(new StringSink(encoded)) // HexEncoder
 	        );// StringSource
 
-   cout << "Cipher Text Buddy List MAC: " << encoded << endl;
+   cout << "Cipher Text MAC: " << encoded << endl;
+
+   sendLen = enconded.size();
+
+   sock->Send((const byte*) sendLen, sizeof(int));
 
    bytes = sock->Send((const byte*) encoded.c_str(), encoded.size());
 
@@ -188,17 +192,21 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
 {
    string decoded = "", recovered = "", ack = "", recoveredPlusTemp = "";
    size_t bytes = 0;
-   byte tempBuf[ 2000 ];
+   char * tempBuf;
    memset(tempBuf, 0, sizeof(tempBuf));
    const int flags = HashVerificationFilter::THROW_EXCEPTION
 	        | HashVerificationFilter::HASH_AT_END;
 
-   bytes = sock->Receive((byte*) buff, len);
+   int recieveLen;
+   sock->Recieve((byte*) recieveLen, sizeof(int));
+   tempBuf = new char [recieveLen+1];
+   memset(tempBuf, 0, recieveLen+1);
+   bytes = sock->Receive((byte*) tempBuf, len);
 
-   StringSource((byte *) buff, bytes, true,
-	        new Base64Decoder(new StringSink(decoded)) // Base64Encoder
-	                 );// StringSource
+   StringSource((const byte*) tempBuf, bytes, true, new Base64Decoder(new StringSink(decoded)) // Base64Encoder
+	        );// StringSource
 
+   delete [] tempBuf;
    // The StreamTransformationFilter removes
    //  padding as required.
    StringSource s(decoded, true,
@@ -207,24 +215,25 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
 
    cout << "Symmetric Recovered: " << recovered << endl;
 
-   ack = "ACK";
-   bytes = sock->Send((const byte*) ack.c_str(), ack.size());
+   bytes = sock->Receive((byte*) tempBuf, sizeof(tempBuf));
+   sock->Recieve((byte*) recieveLen, sizeof(int));
+   tempBuf = new char [recieveLen+1];
+   memset(tempBuf, 0, recieveLen+1);
+   bytes = sock->Receive((byte*) tempBuf, len);
 
-   bytes = sock->Receive(tempBuf, sizeof(tempBuf));
 
    decoded = "";
-   StringSource(tempBuf, bytes, true, new Base64Decoder(new StringSink(decoded)) // Base64Encoder
+   StringSource((const byte*)tempBuf, bytes, true, new Base64Decoder(new StringSink(decoded)) // Base64Encoder
 	        );// StringSource
 
    recoveredPlusTemp = recovered + decoded;
 
-   StringSource(recoveredPlusTemp, true,
-	        new HashVerificationFilter(cmac, NULL, flags)); // StringSource
+   StringSource(recoveredPlusTemp, true, new HashVerificationFilter(cmac, NULL, flags)); // StringSource
 
    cout << "Verified message" << endl;
 
    memset(buff, 0, len);
    memcpy(buff, recovered.c_str(), recovered.length());
-
+   delete [] tempBuf;
    return recovered.length();
 }
