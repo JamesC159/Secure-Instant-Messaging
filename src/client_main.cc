@@ -179,9 +179,13 @@ int main( int argc, char ** argv )
 	  e.SetKeyWithIV(server_key, server_key.size(), iv);
 	  d.SetKeyWithIV(server_key, server_key.size(), iv);
 
+          
+
 	  // The StreamTransformationFilter removes
 	  //  padding as required.
-	  string plain = "GetBuddyList";
+          stringstream portss;
+          portss << locPort;
+	  string plain = portss.str();
 	  char readBuff[ 1500 ];
 
 	  // Send request for buddy list and read the buddy list
