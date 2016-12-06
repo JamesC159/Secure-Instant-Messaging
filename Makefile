@@ -15,7 +15,7 @@ CFLAGS = -Wall -g -std=c++11
 LDFLAGS=
 CC = g++
 INCLUDES = -I${IDIR}
-LIBS = -lpthread -lcryptopp
+LIBS = -lpthread -lcrypto++
 
 SERVER_DRIVER = server
 CLIENT_DRIVER = client

@@ -9,6 +9,13 @@ int charsRead;
 std::stringstream ss;
 std::mutex screenLock;
 
+
+void incomingRequestHandler()
+{
+   incSock.Listen();
+
+}
+
 void startTalking(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket *sock)
 {
    done = false;
@@ -88,4 +95,38 @@ void sockListener(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption 
 	 return;
       }
    }
+}
+
+void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket *sock)
+{
+   char readBuff [1024];
+   done = false;
+   charsRead = strlen("Who would you like to talk to?: ");
+   ss.str("Who would you like to talk to?: ");
+   cout << "Who would you like to talk to?: ";
+   while(true)
+   {
+      char c = getch();
+      screenLock.lock();
+      if (done)
+      {
+         charsRead = 0;
+	 ss.str("");
+	 printf("\n");
+	 break;
+      }
+      if (c == '\n')
+      {
+         symWrite(eAES, cmac, sock, ss.str().c_str(), ss.str().length());
+         memset(readBuff, 0, sizeof(readBuff));
+         symRead(dAES, cmac, sock, readBuff, sizeof(readBuff));
+         // Any other work with server and other client to connect
+         done = true;
+         charsRead = 0;
+	 ss.str("");
+	 break;
+      }
+      screenLock.unlock();
+   }
+   screenLock.unlock();
 }
