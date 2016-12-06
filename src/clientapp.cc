@@ -119,11 +119,13 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
          memset(readBuff, 0, sizeof(readBuff));
          symRead(dAES, cmac, sock, readBuff, sizeof(readBuff));
          // Any other work with server and other client to connect
+         //  includes setting connectedSock
          done = true;
          charsRead = 0;
 	 ss.str("");
 	 break;
       }
+      ss << c;
       screenLock.unlock();
    }
    screenLock.unlock();
@@ -135,9 +137,14 @@ void incomingRequestHandler()
    Socket dummySock;
    struct timeval timeout;
    timeout.tv_sec = 1;
+   timeout.tv_usec = 0;
    dummySock.Create();
    incSock.Listen();
-   while(!done && !incSock.ReceiveReady(&timeout));
+   while(!done && !incSock.ReceiveReady(&timeout))
+   {
+      timeout.tv_sec = 1;
+      timeout.tv_usec = 0;
+   }
    screenLock.lock();
    if (done)
    {
