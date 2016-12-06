@@ -200,7 +200,6 @@ int main( int argc, char ** argv )
 		 buddylist.AddBuddy(buddy, 0);
 	  }
 
-
           connReqHdlr(e, d, cmac, &sockServer);
           startTalking(e, d, cmac, &connectedSock);
 	  sockServer.ShutDown(SHUT_RDWR);

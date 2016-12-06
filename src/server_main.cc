@@ -16,7 +16,7 @@ BuddyList buddylist;
 ClientDB clientdb;
 
 void InitClientDB( ifstream& );
-void InitBuddyBuddy(ifstream& );
+void InitBuddyBuddy( ifstream& );
 void InitBuddies( ifstream& );
 bool authenticate( struct ThreadData * );
 void * clientWorker( void * );
@@ -88,14 +88,14 @@ int main( int argc, char ** argv )
 	  InitBuddies(buddyfile);
 
 	  // Read in the buddies from the buddies file.
-	  	  ifstream buddybuddy("buddybuddy.txt");
-	  	  if ( !buddybuddy.is_open() )
-	  	  {
-	  		 throw(new Exception(Exception::IO_ERROR, "Failed to read buddies.txt"));
-	  	  }
+	  ifstream buddybuddy("buddybuddy.txt");
+	  if ( !buddybuddy.is_open() )
+	  {
+		 throw(new Exception(Exception::IO_ERROR, "Failed to read buddies.txt"));
+	  }
 
-	  	  cout << "Reading content of buddy file" << endl;
-	  	  InitBuddyBuddy(buddybuddy);
+	  cout << "Reading content of buddy file" << endl;
+	  InitBuddyBuddy(buddybuddy);
 
 	  // Read client authentication database
 	  ifstream dbfile("db.txt");
@@ -271,7 +271,7 @@ void * clientWorker( void * in )
    auto it = buddy2buddy.find(tdata->clientName);
    stringstream ss("");
 
-   for (string buddy : it->second)
+   for ( string buddy : it->second )
    {
 	  ss << buddy << " ";
    }
@@ -285,66 +285,85 @@ void * clientWorker( void * in )
    bytes = bytes = symRead(d, cmac, &(tdata->sockSource), readBuff,
 	        sizeof(readBuff));
 
-   // Search for the client in their BuddyList
+   // Search for the requested client in their BuddyList
+   bool found = false;
    it = buddy2buddy.find(tdata->clientName);
-   for (string buddy : it->second)
+   for ( string buddy : it->second )
    {
-	  if (buddy.compare(readBuff) == 0)
+	  if ( buddy.compare(readBuff) == 0 )
 	  {
-			SecByteBlock cmacKey(AES::DEFAULT_KEYLENGTH);
-		    prng.GenerateBlock(cmacKey, cmacKey.size());
 
-		    SecByteBlock aesKey(AES::DEFAULT_KEYLENGTH);
-		    prng.GenerateBlock(aesKey, aesKey.size());
+		 ss.str("");
+		 ss.clear();
 
-		    byte iv[ AES::BLOCKSIZE ];
-		    prng.GenerateBlock(iv, sizeof(iv));
+		 // Get buddy object
+		 string bud(readBuff, sizeof(readBuff));
+		Buddy* requestedClient = buddylist.FindBuddy(bud);
 
-		    string plain;
-		    string mac, encoded;
 
-		    //Convert the keys into strings to send across the socket
-		    encoded.clear();
-		    StringSource(aesKey.data(), aesKey.size(), true, new StringSink(encoded)); // StringSource
+		// Generate shared key between clients
+		 SecByteBlock sharedCMAC(AES::DEFAULT_KEYLENGTH);
+		 prng.GenerateBlock(cmacKey, cmacKey.size());
 
-		    // Send AES Key
-		    SendMsg(encoded, tdata);
+		 SecByteBlock sharedAES(AES::DEFAULT_KEYLENGTH);
+		 prng.GenerateBlock(aesKey, aesKey.size());
 
-		    encoded.clear();
-		    encoded = "";
-		    StringSource(iv, sizeof(iv), true, new StringSink(encoded));  // StringSource
+		 byte sharedIV[ AES::BLOCKSIZE ];
+		 prng.GenerateBlock(iv, sizeof(iv));
 
-		    // Send IV
-		    SendMsg(encoded, tdata);
+		 string mac, encoded;
 
-		    encoded.clear();
-		    encoded = "";
-		    StringSource(cmacKey.data(), cmacKey.size(), true, new StringSink(encoded)); // StringSource
+		 //Convert the keys into strings to send across the socket
+		 encoded.clear();
+		 StringSource(sharedAES.data(), sharedAES.size(), true,
+			      new Base64Encoder(new StringSink(encoded))); // StringSource
 
-		    // Send CMAC Key
-		    SendMsg(encoded, tdata);
+		 ss << encoded << " ";
 
-		    // Define the Encryptors and Decryptors for AES
-		    CBC_Mode< AES >::Encryption e;
-		    CBC_Mode< AES >::Decryption d;
-		    CMAC< AES > cmac(cmacKey, cmacKey.size());
-		    e.SetKeyWithIV(aesKey, aesKey.size(), iv);
-		    d.SetKeyWithIV(aesKey, aesKey.size(), iv);
+		 encoded.clear();
+		 encoded = "";
+		 StringSource(sharedIV, sizeof(sharedIV), true,
+			      new Base64Encoder(new StringSink(encoded))); // StringSource
+
+		 ss << encoded << " ";
+
+		 encoded.clear();
+		 encoded = "";
+		 StringSource(sharedCMAC.data(), sharedCMAC.size(), true,
+			      new Base64Encoder(new StringSink(encoded))); // StringSource
+
+		 send = "";
+		 ss << encoded;
+		 send += ss.str();
+		 send += " ";
+		 send += tdata->clientName;
+		 send += " ";
+
+		 // Encrypt ClientB's ticket
+		 string cipher = "";
+		 CBC_Mode< AES >::Encryption enc = requestedClient->GetEnc();
+		 StringSource s(send, send.size(),
+		 	        new StreamTransformationFilter(enc, new StringSink(cipher)) // StreamTransformationFilter
+		 	                 );// StringSource
+
+		 send += cipher;
+
+		 // Send AES, CMAC, and IV
+		 symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
+
+		 found = true;
 	  }
    }
 
-//   if ( buddy == nullptr )
-//   {
-//	  send = "FIN";
-//	  cout << "Could not find buddy in buddylist" << endl;
-//	  bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(),
-//		       send.length());
-//	  return (void*) -1;
-//   }
+   if ( found == false )
+   {
+	  cout << "Failed to find requested buddy" << endl;
+	  send = "FIN";
+	  symWrite(e, cmac, &tdata->sockSource, send.c_str(), send.length());
+   }
 
    bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
    sockSource.ShutDown(SHUT_RDWR);
-
 
    return (void*) 0;
 }
@@ -474,14 +493,14 @@ void InitBuddies( ifstream& file )
 void InitBuddyBuddy( ifstream& file )
 {
    string line, user, buddy;
-   vector<string> buddies;
+   vector< string > buddies;
 
    while ( getline(file, line) )
    {
 	  stringstream ss(line);
 	  ss >> user;
 	  cout << "Username: " << user << endl;
-	  while(ss >> buddy)
+	  while ( ss >> buddy )
 	  {
 		 buddies.push_back(buddy);
 	  }
