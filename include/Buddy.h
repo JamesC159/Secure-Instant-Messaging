@@ -31,7 +31,7 @@ using std::string;
 class Buddy : public exception
 {
 
-private:
+public:
 
    CBC_Mode< AES >::Encryption enc;
    CBC_Mode< AES >::Decryption dec;
@@ -40,6 +40,7 @@ private:
    Socket sock;
    Integer salt;
    Integer port;
+   string ip;
 
 public:
    Buddy()

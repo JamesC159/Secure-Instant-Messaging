@@ -16,6 +16,7 @@ void startTalking(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption 
 {
    done = false;
    charsRead = 0;
+   ss.clear();
    ss.str("");
    std::thread lthread(sockListener, eAES, dAES, cmac, sock);
    while(true)
@@ -99,8 +100,10 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
    done = false;
    connectedSock.Create();
    std::thread lthread(incomingRequestHandler);
-   charsRead = strlen("Who would you like to talk to?: ");
-   ss.str("Who would you like to talk to?: ");
+   int promptLen = charsRead = strlen("Who would you like to talk to?: ");
+   ss.clear();
+   ss.str("");
+   ss << "Who would you like to talk to?: ";
    cout << "Who would you like to talk to?: ";
    while(true)
    {
@@ -113,17 +116,20 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
 	 printf("\n");
 	 break;
       }
+      printf("%c", c);
       if (c == '\n')
       {
-         symWrite(eAES, cmac, sock, ss.str().c_str(), ss.str().length());
+         symWrite(eAES, cmac, sock, ss.str().substr(promptLen).c_str(), ss.str().substr(promptLen).length());
          memset(readBuff, 0, sizeof(readBuff));
          symRead(dAES, cmac, sock, readBuff, sizeof(readBuff));
          // Any other work with server and other client to connect
+         //  includes setting connectedSock
          done = true;
          charsRead = 0;
 	 ss.str("");
 	 break;
       }
+      ss << c;
       screenLock.unlock();
    }
    screenLock.unlock();
@@ -135,9 +141,14 @@ void incomingRequestHandler()
    Socket dummySock;
    struct timeval timeout;
    timeout.tv_sec = 1;
+   timeout.tv_usec = 0;
    dummySock.Create();
    incSock.Listen();
-   while(!done && !incSock.ReceiveReady(&timeout));
+   while(!done && !incSock.ReceiveReady(&timeout))
+   {
+      timeout.tv_sec = 1;
+      timeout.tv_usec = 0;
+   }
    screenLock.lock();
    if (done)
    {

@@ -254,9 +254,16 @@ void * clientWorker( void * in )
 
    cout << "Bytes read: " << bytes << endl;
 
-   if ( strcmp(readBuff, "GetBuddyList") == 0 )
+   int cliPort = (int) std::stol(readBuff);
+   if ( cliPort > 0 )
    {
-	  cout << "Received the buddy list!" << endl;
+          cout << "Got port from " << client->username << ": " << cliPort << endl;
+          sockaddr_in cAddr;
+          socklen_t c_len = sizeof(cAddr);
+          tdata->sockSource.GetPeerName((sockaddr *) &cAddr, &c_len);
+          client->port = Integer(cliPort);
+          client->ip = inet_ntoa(cAddr.sin_addr);
+          cout << "Ip is: " << client->ip << endl;
    }
    else
    {
@@ -292,6 +299,18 @@ void * clientWorker( void * in )
    {
 	  if ( buddy.compare(readBuff) == 0 )
 	  {
+<<<<<<< HEAD
+=======
+// Generate keys
+// Generate ticket for 'B'
+// Send keys and ticket to 'A'
+// Ticket for 'B'
+//	base64(enc(unameA base64(aesKey) base64(iv) base64(cmacKey)))
+// Message to 'A'
+// 	base64(enc(uanmeB ipB portB base64(aesKey) base64(iv) base64(cmacKey) ticket))
+			SecByteBlock cmacKey(AES::DEFAULT_KEYLENGTH);
+		    prng.GenerateBlock(cmacKey, cmacKey.size());
+>>>>>>> 259c05c2e8426e0d327e67445808a40b4148452d
 
 		 ss.str("");
 		 ss.clear();
