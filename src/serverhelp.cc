@@ -149,7 +149,7 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
    // Send Cipher with CMAC to Server (Request for BuddyList)
    cout << "Symmetric Cipher: " << encoded << endl;
 
-   int sendLen = enconded.size();
+   int sendLen = encoded.size();
 
    sock->Send((const byte*) sendLen, sizeof(int));
 
@@ -164,7 +164,7 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
 
    cout << "Cipher Text MAC: " << encoded << endl;
 
-   sendLen = enconded.size();
+   sendLen = encoded.size();
 
    sock->Send((const byte*) sendLen, sizeof(int));
 
@@ -214,7 +214,7 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
    cout << "Symmetric Recovered: " << recovered << endl;
 
    bytes = sock->Receive((byte*) tempBuf, sizeof(tempBuf));
-   sock->Recieve((byte*) recieveLen, sizeof(int));
+   sock->Receive((byte*) recieveLen, sizeof(int));
    tempBuf = new char [recieveLen+1];
    memset(tempBuf, 0, recieveLen+1);
    bytes = sock->Receive((byte*) tempBuf, len);

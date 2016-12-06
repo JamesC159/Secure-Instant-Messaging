@@ -15,7 +15,6 @@ Socket sockSource;
 BuddyList buddylist;
 ClientDB clientdb;
 
-void processRequest( char * );
 void InitClientDB( ifstream& );
 void InitBuddies( ifstream& );
 bool authenticate( struct ThreadData * );
@@ -275,24 +274,6 @@ void * clientWorker( void * in )
 }
 
 /******************************************************************************
- * FUNCTION:      processRequest
- * DESCRIPTION:   Determine client requests to server.
- * PARAMETERS:    char * request
- *                   - The client request to the server
- * RETURN:        None
- * NOTES:
- *****************************************************************************/
-void processRequest( char * request )
-{
-   // Check if client session request.
-   //    Agree on session key for client-client comm.
-   //    Get ticket to the requested client and send it.
-   // Check if buddy list request.
-   // Check if client wants to close the connection.
-
-}
-
-/******************************************************************************
  * FUNCTION:      authenticate
  * DESCRIPTION:   Authenticates and establishes Diffie-Hellman session key
  *                between a client and the server.
@@ -318,7 +299,6 @@ bool authenticate( struct ThreadData * tdata )
 
 	  // Get username and passwordfrom client
 	  recvBuf = RecoverMsg(tdata);
-//	   StringSource ss1(rec, sizeof(rec), true, new StringSink(recvBuf));
 
 	  ss.str(recvBuf);
 	  ss >> uname >> password;
@@ -346,7 +326,6 @@ bool authenticate( struct ThreadData * tdata )
 
 	  // Receive username, hash(pw, salt) and nonce
 	  recvBuf = RecoverMsg(tdata);
-//	   StringSource ss2(rec, sizeof(rec), true, new StringSink(recvBuf));
 	  ss.str(recvBuf);
 
 	  // Parse the reply

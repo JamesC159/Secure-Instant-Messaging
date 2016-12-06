@@ -20,10 +20,10 @@ string recoverMsg( Socket& sockServer )
 	  Integer c = 0, r = 0, m = 0;
 	  size_t bytes = 0, req = 0;
           int recieveLen;
-          sock->Receive((byte*) &recieveLen, sizeof(int));
+          sockServer.Receive((byte*) &recieveLen, sizeof(int));
           byteBuf = new byte [recieveLen+1];
           memset(byteBuf, 0, recieveLen+1);
-          bytes = sockServer.Receive((byte*) tempBuf, len);
+          bytes = sockServer.Receive((byte*) byteBuf, recieveLen);
 
 	  // Retrieve message from socket
 	  cout << "Waiting for reply from server..." << endl;
@@ -86,7 +86,7 @@ void sendMsg( Socket& sockServer, string sendBuf )
 
 	  cout << "Encoded Cipher Sent: " << encodedCipher << endl;
 
-	  int sendSize - encodedCipher.size();
+	  int sendSize = encodedCipher.size();
 	  sockServer.Send((const byte *) &sendSize, sizeof(int));
 
 	  // Send Encoded cipher
@@ -121,7 +121,7 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
    // Send Cipher with CMAC to Server (Request for BuddyList)
    cout << "Symmetric Cipher: " << encoded << endl;
 
-   int sendLen = enconded.size();
+   int sendLen = encoded.size();
 
    sock->Send((const byte*) sendLen, sizeof(int));
 
@@ -136,7 +136,7 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
 
    cout << "Cipher Text MAC: " << encoded << endl;
 
-   sendLen = enconded.size();
+   sendLen = encoded.size();
 
    sock->Send((const byte*) sendLen, sizeof(int));
 
@@ -157,7 +157,7 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
 	        | HashVerificationFilter::HASH_AT_END;
 
    int recieveLen;
-   sock->Recieve((byte*) recieveLen, sizeof(int));
+   sock->Receive((byte*) recieveLen, sizeof(int));
    tempBuf = new char [recieveLen+1];
    memset(tempBuf, 0, recieveLen+1);
    bytes = sock->Receive((byte*) tempBuf, len);
@@ -175,7 +175,7 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
    cout << "Symmetric Recovered: " << recovered << endl;
 
    bytes = sock->Receive((byte*) tempBuf, sizeof(tempBuf));
-   sock->Recieve((byte*) recieveLen, sizeof(int));
+   sock->Receive((byte*) recieveLen, sizeof(int));
    tempBuf = new char [recieveLen+1];
    memset(tempBuf, 0, recieveLen+1);
    bytes = sock->Receive((byte*) tempBuf, len);
