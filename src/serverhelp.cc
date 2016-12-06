@@ -24,22 +24,23 @@ string RecoverMsg( struct ThreadData * tdata )
 	  AutoSeededRandomPool rng;
 	  string recovered = "", ack = "", decodedCipher = "";
 	  byte * byteBuf;
-	  memset(byteBuf, 0, sizeof(byteBuf));
 
 	  // Retrieve message from socket
 	  cout << "Waiting to receive a message from client " << tdata->tid << endl;
-          int recieveLen;
-          tdata->sockSource.Receive((byte*) &recieveLen, sizeof(int));
-          byteBuf = new byte [recieveLen+1];
-          memset(byteBuf, 0, recieveLen+1);
+          int receiveLen;
+          tdata->sockSource.Receive((byte*) &receiveLen, sizeof(int));
+          byteBuf = new byte [receiveLen+1];
+          memset(byteBuf, 0, receiveLen+1);
 
-	  bytes = tdata->sockSource.Receive(byteBuf, sizeof(byteBuf));
+          cout << "Received Length: " << receiveLen << endl;
+
+	  bytes = tdata->sockSource.Receive(byteBuf, receiveLen);
 	  cout << "Bytes Read: " << bytes << endl;
 
 	  cout << "Encoded Cipher Received: " << byteBuf << endl;
 
 	  decodedCipher = "";
-	  StringSource(byteBuf, sizeof(byteBuf), true,
+	  StringSource(byteBuf, receiveLen, true,
 		       new Base64Decoder(new StringSink(decodedCipher)));
 
 	  c = Integer(decodedCipher.c_str());
@@ -151,9 +152,13 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
 
    int sendLen = encoded.size();
 
-   sock->Send((const byte*) sendLen, sizeof(int));
+   sock->Send((const byte*) &sendLen, sizeof(int));
 
-   originalBytes = sock->Send((const byte*) encoded.c_str(), encoded.size());
+   cout << "Made it past first send" << endl;
+
+   originalBytes = sock->Send((const byte*) encoded.c_str(), sendLen);
+
+   cout << "Made it past second send" << endl;
 
    StringSource((const byte*)buff, len, true, new HashFilter(cmac, new StringSink(mac)) // HashFilter
 	        );// StringSource
@@ -166,9 +171,15 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
 
    sendLen = encoded.size();
 
-   sock->Send((const byte*) sendLen, sizeof(int));
+   sock->Send((const byte*) &sendLen, sizeof(int));
 
-   bytes = sock->Send((const byte*) encoded.c_str(), encoded.size());
+   cout << "Made it past third send" << endl;
+
+
+   bytes = sock->Send((const byte*) encoded.c_str(), sendLen);
+
+   cout << "Made it past fourth send" << endl;
+
 
    return originalBytes;
 
@@ -189,49 +200,47 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
          char * buff, int len )
 {
    string decoded = "", recovered = "", ack = "", recoveredPlusTemp = "";
-   size_t bytes = 0;
-   char * tempBuf;
-   memset(tempBuf, 0, sizeof(tempBuf));
-   const int flags = HashVerificationFilter::THROW_EXCEPTION
-	        | HashVerificationFilter::HASH_AT_END;
+    size_t bytes = 0;
+    byte* tempBuf;
+    const int flags = HashVerificationFilter::THROW_EXCEPTION
+ 	        | HashVerificationFilter::HASH_AT_END;
 
-   int recieveLen;
-   sock->Receive((byte*) recieveLen, sizeof(int));
-   tempBuf = new char [recieveLen+1];
-   memset(tempBuf, 0, recieveLen+1);
-   bytes = sock->Receive((byte*) tempBuf, len);
+    int receiveLen;
+    sock->Receive((byte*) &receiveLen, sizeof(int));
+    tempBuf = new byte [receiveLen+1];
+    memset(tempBuf, 0, receiveLen+1);
+    bytes = sock->Receive(tempBuf, receiveLen);
 
-   StringSource((const byte*) tempBuf, bytes, true, new Base64Decoder(new StringSink(decoded)) // Base64Encoder
-	        );// StringSource
+    StringSource(tempBuf, receiveLen, true, new Base64Decoder(new StringSink(decoded)) // Base64Encoder
+ 	        );// StringSource
 
-   delete [] tempBuf;
-   // The StreamTransformationFilter removes
-   //  padding as required.
-   StringSource s(decoded, true,
-	        new StreamTransformationFilter(dAES, new StringSink(recovered)) // StreamTransformationFilter
-	                 );// StringSource
+    delete [] tempBuf;
+    // The StreamTransformationFilter removes
+    //  padding as required.
+    StringSource s(decoded, true,
+ 	        new StreamTransformationFilter(dAES, new StringSink(recovered)) // StreamTransformationFilter
+ 	                 );// StringSource
 
-   cout << "Symmetric Recovered: " << recovered << endl;
+    cout << "Symmetric Recovered: " << recovered << endl;
 
-   bytes = sock->Receive((byte*) tempBuf, sizeof(tempBuf));
-   sock->Receive((byte*) recieveLen, sizeof(int));
-   tempBuf = new char [recieveLen+1];
-   memset(tempBuf, 0, recieveLen+1);
-   bytes = sock->Receive((byte*) tempBuf, len);
+    sock->Receive((byte*) &receiveLen, sizeof(int));
+    tempBuf = new byte [receiveLen+1];
+    memset(tempBuf, 0, receiveLen+1);
+    bytes = sock->Receive(tempBuf, receiveLen);
 
 
-   decoded = "";
-   StringSource((const byte*)tempBuf, bytes, true, new Base64Decoder(new StringSink(decoded)) // Base64Encoder
-	        );// StringSource
+    decoded = "";
+    StringSource(tempBuf, receiveLen, true, new Base64Decoder(new StringSink(decoded)) // Base64Encoder
+ 	        );// StringSource
 
-   recoveredPlusTemp = recovered + decoded;
+    recoveredPlusTemp = recovered + decoded;
 
-   StringSource(recoveredPlusTemp, true, new HashVerificationFilter(cmac, NULL, flags)); // StringSource
+    StringSource(recoveredPlusTemp, true, new HashVerificationFilter(cmac, NULL, flags)); // StringSource
 
-   cout << "Verified message" << endl;
+    cout << "Verified message" << endl;
 
-   memset(buff, 0, len);
-   memcpy(buff, recovered.c_str(), recovered.length());
-   delete [] tempBuf;
-   return recovered.length();
+    memset(buff, 0, len);
+    memcpy(buff, recovered.c_str(), recovered.length());
+    delete [] tempBuf;
+    return recovered.length();
 }
