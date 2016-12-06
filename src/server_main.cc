@@ -100,14 +100,17 @@ int main( int argc, char ** argv )
 	  // Start client listen-accept phase.
 	  while ( true )
 	  {
+                 Socket * cliSock;
+                 cliSock = new Socket;
+                 cliSock->Create();
 
-		 sockListen.Accept(sockSource, (sockaddr*) &clientaddr, &clientlen);
+		 sockListen.Accept(*cliSock, (sockaddr*) &clientaddr, &clientlen);
 		 tdata = new struct ThreadData;
 		 tdata->tid = tcount;
 		 tdata->clientaddr = clientaddr;
 		 tdata->clientlen = clientlen;
 		 tdata->sockListen = sockListen;
-		 tdata->sockSource = sockSource;
+		 tdata->sockSource = *cliSock;
 		 tdata->privateKey = privateKey;
 
 		 rc = pthread_create(&clientThread, NULL, clientWorker, (void *) tdata);
