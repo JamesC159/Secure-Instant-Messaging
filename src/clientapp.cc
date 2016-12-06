@@ -96,7 +96,7 @@ void sockListener(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption 
 
 void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket *sock)
 {
-   char readBuff [1024];
+   char readBuff [20000];
    done = false;
    connectedSock.Create();
    std::thread lthread(incomingRequestHandler);
@@ -122,11 +122,15 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
          symWrite(eAES, cmac, sock, ss.str().substr(promptLen).c_str(), ss.str().substr(promptLen).length());
          memset(readBuff, 0, sizeof(readBuff));
          symRead(dAES, cmac, sock, readBuff, sizeof(readBuff));
+
          // Any other work with server and other client to connect
          //  includes setting connectedSock
+
+
          done = true;
          charsRead = 0;
 	 ss.str("");
+	 CheckFin(string(readBuff));
 	 break;
       }
       ss << c;

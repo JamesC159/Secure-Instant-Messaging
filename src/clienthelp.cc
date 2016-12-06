@@ -196,3 +196,11 @@ int symRead( CBC_Mode< AES >::Decryption dAES, CMAC< AES > cmac, Socket * sock,
     delete [] tempBuf;
     return recovered.length();
 }
+
+void CheckFin( string fin )
+{
+   if(fin == "FIN")
+   {
+	  throw(new Exception(Exception::OTHER_ERROR, "Received FIN, exiting now"));
+   }
+}

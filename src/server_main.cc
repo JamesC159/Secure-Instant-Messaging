@@ -299,26 +299,21 @@ void * clientWorker( void * in )
    {
 	  if ( buddy.compare(readBuff) == 0 )
 	  {
-<<<<<<< HEAD
-=======
-// Generate keys
-// Generate ticket for 'B'
-// Send keys and ticket to 'A'
-// Ticket for 'B'
-//	base64(enc(unameA base64(aesKey) base64(iv) base64(cmacKey)))
-// Message to 'A'
-// 	base64(enc(uanmeB ipB portB base64(aesKey) base64(iv) base64(cmacKey) ticket))
-			SecByteBlock cmacKey(AES::DEFAULT_KEYLENGTH);
-		    prng.GenerateBlock(cmacKey, cmacKey.size());
->>>>>>> 259c05c2e8426e0d327e67445808a40b4148452d
 
 		 ss.str("");
 		 ss.clear();
 
 		 // Get buddy object
-		 string bud(readBuff, sizeof(readBuff));
-		Buddy* requestedClient = buddylist.FindBuddy(bud);
 
+		Buddy* requestedClient = buddylist.FindBuddy(buddy);
+		if(requestedClient == nullptr)
+		{
+		   break;
+		}
+		else if (requestedClient->ip == "0.0.0.0")
+		{
+		   break;
+		}
 
 		// Generate shared key between clients
 		 SecByteBlock sharedCMAC(AES::DEFAULT_KEYLENGTH);
@@ -366,9 +361,11 @@ void * clientWorker( void * in )
 		 	                 );// StringSource
 
 		 send += cipher;
+		 string sink;
+		 StringSource(send, send.size(), new Base64Encoder(new StringSink(sink)));
 
 		 // Send AES, CMAC, and IV
-		 symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
+		 symWrite(e, cmac, &(tdata->sockSource), sink.c_str(), sink.length());
 
 		 found = true;
 	  }
@@ -381,8 +378,8 @@ void * clientWorker( void * in )
 	  symWrite(e, cmac, &tdata->sockSource, send.c_str(), send.length());
    }
 
-   bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
-   sockSource.ShutDown(SHUT_RDWR);
+//   bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
+   tdata->sockSource.ShutDown(SHUT_RDWR);
 
    return (void*) 0;
 }

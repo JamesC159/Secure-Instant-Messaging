@@ -40,16 +40,20 @@ public:
    Socket sock;
    Integer salt;
    Integer port;
-   string ip;
+   string ip = "";
 
 public:
    Buddy()
    {
+	  ip = "0.0.0.0";
+	  port = 0;
    }
    Buddy( string username, Integer port )
    {
 	  this->username = username;
 	  this->port = port;
+	  ip = "0.0.0.0";
+	  port = 0;
    }
    Buddy( string username, string password, Integer port )
    {
