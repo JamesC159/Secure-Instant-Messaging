@@ -8,6 +8,8 @@
 #include "clienthelp.h"
 #include <sys/socket.h>
 
+BuddyList buddylist;
+
 RSA::PublicKey serverKey;
 
 string recoverMsg( Socket& sockServer )
@@ -127,12 +129,7 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
    int sendLen = encoded.size();
 
    sock->Send((const byte*) &sendLen, sizeof(int));
-
-   cout << "Made it past first send" << endl;
-
    originalBytes = sock->Send((const byte*) encoded.c_str(), sendLen);
-
-   cout << "Made it past second send" << endl;
 
    StringSource((const byte*)buff, len, true, new HashFilter(cmac, new StringSink(mac)) // HashFilter
 	        );// StringSource
@@ -144,16 +141,8 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
    cout << "Cipher Text MAC: " << encoded << endl;
 
    sendLen = encoded.size();
-
    sock->Send((const byte*) &sendLen, sizeof(int));
-
-   cout << "Made it past third send" << endl;
-
-
    bytes = sock->Send((const byte*) encoded.c_str(), sendLen);
-
-   cout << "Made it past fourth send" << endl;
-
 
    return originalBytes;
 

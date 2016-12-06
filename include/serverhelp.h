@@ -25,6 +25,15 @@ using std::string;
 #include <sstream>
 using std::stringstream;
 
+#include <vector>
+using std::vector;
+
+#include <map>
+using std::make_pair;
+
+#include <unordered_map>
+using std::unordered_map;
+
 #include <cryptopp/cryptlib.h>
 using CryptoPP::Exception;
 using CryptoPP::PrivateKey;
@@ -61,7 +70,6 @@ using CryptoPP::HexDecoder;
 #include <cryptopp/base64.h>
 using CryptoPP::Base64Encoder;
 using CryptoPP::Base64Decoder;
-
 
 #include "cryptopp/ccm.h"
 using CryptoPP::CBC_Mode;
@@ -112,8 +120,10 @@ using std::runtime_error;
 
 #include "assert.h"
 
+extern unordered_map< string, vector< string > > buddy2buddy;
+
 const int MAX_BUF = 500;
-const int BUDDIES = 15;
+const int BUDDIES = 6;
 const string FIN_STR = "FIN";
 const string SYN_STR = "SYN";
 const string RST_STR = "RST";
@@ -126,6 +136,7 @@ struct ThreadData
    Socket sockSource;
    sockaddr_in clientaddr;
    socklen_t clientlen;
+   string clientName;
 };
 
 void
@@ -134,7 +145,9 @@ SendMsg( string, struct ThreadData * );
 string
 RecoverMsg( struct ThreadData * );
 
-int symWrite(CBC_Mode< AES >::Encryption, CMAC< AES >, Socket * sock, const char * buff, int len);
-int symRead(CBC_Mode< AES >::Decryption, CMAC< AES >, Socket * sock, char * buff, int len);
+int symWrite( CBC_Mode< AES >::Encryption, CMAC< AES >, Socket * sock,
+         const char * buff, int len );
+int symRead( CBC_Mode< AES >::Decryption, CMAC< AES >, Socket * sock,
+         char * buff, int len );
 
 #endif /* SERVERHELP_H_ */

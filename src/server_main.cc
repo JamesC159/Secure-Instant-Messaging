@@ -16,6 +16,7 @@ BuddyList buddylist;
 ClientDB clientdb;
 
 void InitClientDB( ifstream& );
+void InitBuddyBuddy(ifstream& );
 void InitBuddies( ifstream& );
 bool authenticate( struct ThreadData * );
 void * clientWorker( void * );
@@ -61,7 +62,6 @@ int main( int argc, char ** argv )
 	  RSA::PrivateKey privateKey;
 	  RSA::PublicKey publicKey;
 
-
 	  // Load the private and public keys
 	  LoadPrivateKey("rsa-private.key", privateKey);
 	  if ( !privateKey.Validate(rng, 3) )
@@ -85,7 +85,17 @@ int main( int argc, char ** argv )
 	  }
 
 	  cout << "Reading content of buddy file" << endl;
-	  	  InitBuddies(buddyfile);
+	  InitBuddies(buddyfile);
+
+	  // Read in the buddies from the buddies file.
+	  	  ifstream buddybuddy("buddybuddy.txt");
+	  	  if ( !buddybuddy.is_open() )
+	  	  {
+	  		 throw(new Exception(Exception::IO_ERROR, "Failed to read buddies.txt"));
+	  	  }
+
+	  	  cout << "Reading content of buddy file" << endl;
+	  	  InitBuddyBuddy(buddybuddy);
 
 	  // Read client authentication database
 	  ifstream dbfile("db.txt");
@@ -100,9 +110,9 @@ int main( int argc, char ** argv )
 	  // Start client listen-accept phase.
 	  while ( true )
 	  {
-                 Socket * cliSock;
-                 cliSock = new Socket;
-                 cliSock->Create();
+		 Socket * cliSock;
+		 cliSock = new Socket;
+		 cliSock->Create();
 
 		 sockListen.Accept(*cliSock, (sockaddr*) &clientaddr, &clientlen);
 		 tdata = new struct ThreadData;
@@ -116,7 +126,8 @@ int main( int argc, char ** argv )
 		 rc = pthread_create(&clientThread, NULL, clientWorker, (void *) tdata);
 		 if ( rc )
 		 {
-			throw(new Exception(Exception::OTHER_ERROR, "Failed creating client thread"));
+			throw(new Exception(Exception::OTHER_ERROR,
+			         "Failed creating client thread"));
 		 }
 		 tcount++;
 	  }
@@ -199,24 +210,21 @@ void * clientWorker( void * in )
 
    //Convert the keys into strings to send across the socket
    encoded.clear();
-   StringSource(aesKey.data(), aesKey.size(), true, new StringSink(encoded)
-	        );// StringSource
+   StringSource(aesKey.data(), aesKey.size(), true, new StringSink(encoded)); // StringSource
 
    // Send AES Key
    SendMsg(encoded, tdata);
 
    encoded.clear();
    encoded = "";
-   StringSource(iv, sizeof(iv), true, new StringSink(encoded)
-	        );// StringSource
+   StringSource(iv, sizeof(iv), true, new StringSink(encoded));  // StringSource
 
    // Send IV
    SendMsg(encoded, tdata);
 
    encoded.clear();
    encoded = "";
-   StringSource(cmacKey.data(), cmacKey.size(), true, new StringSink(encoded)
-	        );// StringSource
+   StringSource(cmacKey.data(), cmacKey.size(), true, new StringSink(encoded)); // StringSource
 
    // Send CMAC Key
    SendMsg(encoded, tdata);
@@ -248,12 +256,23 @@ void * clientWorker( void * in )
    {
 	  send = "FIN";
 	  cout << "Invalid buddylist request..." << endl;
-	   bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
-	   return (void*) -1;
+	  bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(),
+		       send.length());
+	  return (void*) -1;
    }
 
    // Give the client their buddylist
-   send = "Here is your buddy list";
+   auto it = buddy2buddy.find(tdata->clientName);
+   vector<string> clientBuddyList = it->second;
+   stringstream ss("");
+
+   for (string buddy : clientBuddyList)
+   {
+	  ss << buddy << " ";
+   }
+
+   send = ss.str();
+
    bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
 
    // Read request to talk to another client.
@@ -267,12 +286,15 @@ void * clientWorker( void * in )
    {
 	  send = "FIN";
 	  cout << "Could not find buddy in buddylist" << endl;
-	  bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
+	  bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(),
+		       send.length());
 	  return (void*) -1;
    }
 
    bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
    sockSource.ShutDown(SHUT_RDWR);
+
+
    return (void*) 0;
 }
 
@@ -300,7 +322,7 @@ bool authenticate( struct ThreadData * tdata )
 	  string nstr;
 	  string tnonce;
 
-	  // Get username and passwordfrom client
+	  // Get username and password from client
 	  recvBuf = RecoverMsg(tdata);
 
 	  ss.str(recvBuf);
@@ -315,6 +337,8 @@ bool authenticate( struct ThreadData * tdata )
 		 SendMsg(sendBuf, tdata);
 		 return false;
 	  }
+
+	  tdata->clientName = uname;
 
 	  // Send Nonce and Salt
 	  nonce = Integer(rng, 64);
@@ -386,6 +410,33 @@ void InitBuddies( ifstream& file )
 	  cout << "Username: " << user << " Port: " << port << endl;
 	  Integer portno = Integer(port.c_str());
 	  buddylist.AddBuddy(user, portno);
+   }
+}
+
+/******************************************************************************
+ * FUNCTION:      InitBuddies
+ * DESCRIPTION:   Read in the buddies.txt file.
+ * PARAMETERS:    ifstream& file - buddies.txt file
+ * RETURN:        None
+ * NOTES:
+ *****************************************************************************/
+void InitBuddyBuddy( ifstream& file )
+{
+   string line, user, buddy;
+   vector<string> buddies;
+
+   while ( getline(file, line) )
+   {
+	  stringstream ss(line);
+	  ss >> user;
+	  cout << "Username: " << user << endl;
+	  while(ss >> buddy)
+	  {
+		 buddies.push_back(buddy);
+	  }
+	  ss.str("");
+	  ss.clear();
+	  buddy2buddy.insert(make_pair(user, buddies));
    }
 }
 

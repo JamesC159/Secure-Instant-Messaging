@@ -19,7 +19,7 @@ using CryptoPP::FileSink;
 #include <cryptopp/osrng.h>
 using CryptoPP::AutoSeededRandomPool;
 
-const int port = 15653;
+const int port = 15656;
 
 void
 SavePrivateKey( const string& filename, const PrivateKey& key );

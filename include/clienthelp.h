@@ -8,6 +8,8 @@
 #ifndef CLIENTHELP_H_
 #define CLIENTHELP_H_
 
+#include <BuddyList.h>
+
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -103,6 +105,8 @@ using std::runtime_error;
 using CryptoPP::CMAC;
 
 #include "assert.h"
+
+extern BuddyList buddylist;
 
 const int MAX_BUF = 500;
 const string FIN_STR = "FIN"; // These flags can be whatever we want them to be.

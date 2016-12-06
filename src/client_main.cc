@@ -162,51 +162,59 @@ int main( int argc, char ** argv )
 	  ArraySource((const byte*) cmac_str.c_str(), cmac_str.size(), true,
 		       new ArraySink(cmac_key, sizeof(cmac_key)));
 
-		 CBC_Mode< AES >::Encryption e;
-		 CBC_Mode< AES >::Decryption d;
-		 CMAC< AES > cmac(cmac_key, cmac_key.size());
+	  CBC_Mode< AES >::Encryption e;
+	  CBC_Mode< AES >::Decryption d;
+	  CMAC< AES > cmac(cmac_key, cmac_key.size());
 
-		 e.SetKeyWithIV(server_key, server_key.size(), iv);
-		 d.SetKeyWithIV(server_key, server_key.size(), iv);
+	  e.SetKeyWithIV(server_key, server_key.size(), iv);
+	  d.SetKeyWithIV(server_key, server_key.size(), iv);
 
-		 // The StreamTransformationFilter removes
-		 //  padding as required.
-		 string plain = "GetBuddyList";
-		 char readBuff[ 1500 ];
+	  // The StreamTransformationFilter removes
+	  //  padding as required.
+	  string plain = "GetBuddyList";
+	  char readBuff[ 1500 ];
 
-		 // Send request for buddy list and read the buddy list
-		 symWrite(e, cmac, &sockServer, plain.c_str(), plain.length());
+	  // Send request for buddy list and read the buddy list
+	  symWrite(e, cmac, &sockServer, plain.c_str(), plain.length());
 
-		 // Read client's buddy list
-		 symRead(d, cmac, &sockServer, readBuff, sizeof(readBuff));
+	  // Read client's buddy list
+	  symRead(d, cmac, &sockServer, readBuff, sizeof(readBuff));
+	  cout << "Buddy List: " << readBuff << endl;
 
-		 cout << "Buddy List: " << readBuff << endl;
+	  ss.str(readBuff);
+	  string buddy;
 
-		 plain = "";
-		 cout << "Who would you like to talk to?: ";
-		 if ( !getline(cin, plain) )
-		 {
-			throw(new Exception(Exception::IO_ERROR,
-			         "Failed to get client request from user."));
-		 }
+	  // Add buddies to buddy list. Building the list here
+	  while(ss >> buddy)
+	  {
+		 buddylist.AddBuddy(buddy, 0);
+	  }
 
-		 symWrite(e, cmac, &sockServer, plain.c_str(), plain.length());
+	  plain = "";
+	  cout << "Who would you like to talk to?: ";
+	  if ( !getline(cin, plain) )
+	  {
+		 throw(new Exception(Exception::IO_ERROR,
+			      "Failed to get client request from user."));
+	  }
 
-		 memset(readBuff, 0, sizeof(readBuff));
-		 symRead(d, cmac, &sockServer, readBuff, sizeof(readBuff));
+	  symWrite(e, cmac, &sockServer, plain.c_str(), plain.length());
 
-		 cout << "Are you server?: ";
-		 string isServer;
-		 if ( !getline(cin, isServer) )
-		 {
-			throw(new Exception(Exception::IO_ERROR,
-			         "Failed to get client request from user."));
-		 }
+	  memset(readBuff, 0, sizeof(readBuff));
+	  symRead(d, cmac, &sockServer, readBuff, sizeof(readBuff));
 
-		 if (isServer == "y")
-		 {
+	  cout << "Are you server?: ";
+	  string isServer;
+	  if ( !getline(cin, isServer) )
+	  {
+		 throw(new Exception(Exception::IO_ERROR,
+			      "Failed to get client request from user."));
+	  }
+
+	  if ( isServer == "y" )
+	  {
 		 cout << "What port?: ";
-                 string port;
+		 string port;
 		 if ( !getline(cin, port) )
 		 {
 			throw(new Exception(Exception::IO_ERROR,
@@ -219,17 +227,17 @@ int main( int argc, char ** argv )
 		 dummyServer.Bind(atoi(port.c_str()));
 		 dummyServer.Listen();
 		 dummyServer.Accept(dummySock, (sockaddr *) NULL, (socklen_t *) NULL);
-                 char buff [32];
-                 memset(buff, '\0', sizeof(buff));
-                 symRead(d, cmac, &dummySock, buff, sizeof(buff));
-                 otherName = buff;
-                 symWrite(e, cmac, &dummySock, ownName.c_str(), ownName.length());
+		 char buff[ 32 ];
+		 memset(buff, '\0', sizeof(buff));
+		 symRead(d, cmac, &dummySock, buff, sizeof(buff));
+		 otherName = buff;
+		 symWrite(e, cmac, &dummySock, ownName.c_str(), ownName.length());
 
 		 startTalking(e, d, cmac, &dummySock);
-		 }
-		 else
-		 {
-                 cout << "What IP would you like to talk to?: ";
+	  }
+	  else
+	  {
+		 cout << "What IP would you like to talk to?: ";
 		 string ip;
 		 if ( !getline(cin, ip) )
 		 {
@@ -237,7 +245,7 @@ int main( int argc, char ** argv )
 			         "Failed to get client request from user."));
 		 }
 
-                 cout << "What port would you like to talk to?: ";
+		 cout << "What port would you like to talk to?: ";
 		 string port;
 		 if ( !getline(cin, port) )
 		 {
@@ -248,13 +256,13 @@ int main( int argc, char ** argv )
 		 Socket dummySock;
 		 dummySock.Create();
 		 dummySock.Connect(ip.c_str(), atoi(port.c_str()));
-                 symWrite(e, cmac, &dummySock, ownName.c_str(), ownName.length());
-                 char buff [32];
-                 memset(buff, '\0', sizeof(buff));
-                 symRead(d, cmac, &dummySock, buff, sizeof(buff));
-                 otherName = buff;
+		 symWrite(e, cmac, &dummySock, ownName.c_str(), ownName.length());
+		 char buff[ 32 ];
+		 memset(buff, '\0', sizeof(buff));
+		 symRead(d, cmac, &dummySock, buff, sizeof(buff));
+		 otherName = buff;
 		 startTalking(e, d, cmac, &dummySock);
-		 }
+	  }
 
 	  sockServer.ShutDown(SHUT_RDWR);
    }

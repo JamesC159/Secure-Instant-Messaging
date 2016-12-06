@@ -7,6 +7,8 @@
 
 #include "serverhelp.h"
 
+unordered_map<string, vector<string>> buddy2buddy;
+
 /******************************************************************************
  * FUNCTION:      RecoverMsg
  * DESCRIPTION:   Recovers a Base64 encoded message from a client, decodes it,
@@ -154,11 +156,7 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
 
    sock->Send((const byte*) &sendLen, sizeof(int));
 
-   cout << "Made it past first send" << endl;
-
    originalBytes = sock->Send((const byte*) encoded.c_str(), sendLen);
-
-   cout << "Made it past second send" << endl;
 
    StringSource((const byte*)buff, len, true, new HashFilter(cmac, new StringSink(mac)) // HashFilter
 	        );// StringSource
@@ -172,13 +170,7 @@ int symWrite( CBC_Mode< AES >::Encryption eAES, CMAC< AES > cmac, Socket * sock,
    sendLen = encoded.size();
 
    sock->Send((const byte*) &sendLen, sizeof(int));
-
-   cout << "Made it past third send" << endl;
-
-
    bytes = sock->Send((const byte*) encoded.c_str(), sendLen);
-
-   cout << "Made it past fourth send" << endl;
 
 
    return originalBytes;
