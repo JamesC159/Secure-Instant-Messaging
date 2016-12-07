@@ -12,6 +12,9 @@ std::mutex screenLock;
 CBC_Mode < AES >::Encryption commonE;
 CBC_Mode < AES >::Decryption commonD;
 CMAC< AES > commonCmac;
+SecByteBlock cmac_key(AES::DEFAULT_KEYLENGTH);
+SecByteBlock common_key(AES::DEFAULT_KEYLENGTH);
+byte iv[ AES::BLOCKSIZE ];
 
 void split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss;
@@ -131,6 +134,7 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
          charsRead = 0;
 	 ss.str("");
 	 printf("\n");
+         symWrite(eAES, cmac, sock, string("FIN").c_str(), string("FIN").length());
 	 break;
       }
       printf("%c", c);
@@ -146,10 +150,8 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
          // Any other work with server and other client to connect
          //  includes setting connectedSock
          ss << readBuff;
-	 cout << "Got response: " << ss.str() << endl << "End of response" << endl;
          string oName, ip, port, encAesKey, enciv, enccmac, ticket;
          std::vector<string> elims = split(ss.str(), ' ');
-	 cout << "elims count: " << elims.size() << endl;
          oName = elims[0];
          ip = elims[1];
          port = elims[2];
@@ -157,14 +159,10 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
          enciv = elims[4];
          enccmac = elims[5];
          ticket = elims[6];
-	 cout << "ticket: " << ticket << endl;
          connectedSock.Connect(ip.c_str(), std::stoi(port));
 	 int len2send = ticket.size();
 	 connectedSock.Send((const byte *) &len2send, sizeof(int));
          connectedSock.Send((const byte *) ticket.c_str(), len2send);
-         SecByteBlock cmac_key(AES::DEFAULT_KEYLENGTH);
-         SecByteBlock common_key(AES::DEFAULT_KEYLENGTH);
-         byte iv[ AES::BLOCKSIZE ];
          ArraySource((const byte *) encAesKey.c_str(), encAesKey.size(), true, new Base64Decoder(new ArraySink(common_key, sizeof(common_key))));
          ArraySource((const byte *) enciv.c_str(), enciv.size(), true, new Base64Decoder(new ArraySink(iv, sizeof(iv))));
          ArraySource((const byte *) enccmac.c_str(), enccmac.size(), true, new Base64Decoder(new ArraySink(cmac_key, sizeof(cmac_key))));
@@ -172,9 +170,9 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
          commonCmac.SetKey(cmac_key, cmac_key.size());
          commonE.SetKeyWithIV(common_key, common_key.size(), iv);
          commonD.SetKeyWithIV(common_key, common_key.size(), iv);
+         symWrite(commonE, commonCmac, &connectedSock, ownName.c_str(), ownName.length());
          symRead(commonD, commonCmac, &connectedSock, readBuff, sizeof(readBuff));
          otherName = readBuff;
-         symWrite(commonE, commonCmac, &connectedSock, ownName.c_str(), ownName.length());
 	 break;
       }
       ss << c;
@@ -186,12 +184,10 @@ void connReqHdlr(CBC_Mode< AES >::Encryption eAES, CBC_Mode< AES >::Decryption d
 
 void incomingRequestHandler(CBC_Mode< AES >::Decryption dAES)
 {
-   Socket dummySock;
    byte * tempBuf;
    struct timeval timeout;
    timeout.tv_sec = 1;
    timeout.tv_usec = 0;
-   dummySock.Create();
    incSock.Listen();
    while(!done && !incSock.ReceiveReady(&timeout))
    {
@@ -206,25 +202,19 @@ void incomingRequestHandler(CBC_Mode< AES >::Decryption dAES)
    }
    done = true;
    int len2read;
-   incSock.Accept(dummySock, (sockaddr *) NULL, (socklen_t *) NULL);
-   connectedSock = dummySock;
+   incSock.Accept(connectedSock, (sockaddr *) NULL, (socklen_t *) NULL);
    //other stuff needed to connect
    connectedSock.Receive((byte *) &len2read, sizeof(int));
    tempBuf = new byte [len2read + 1];
    memset(tempBuf, 0, len2read + 1);
    int bytesRead = connectedSock.Receive(tempBuf, len2read);
    string unencTicket;
-   cout << "Got encrypted ticket: " << tempBuf << endl;
    StringSource(tempBuf, bytesRead, true, new Base64Decoder(new StreamTransformationFilter(dAES, new StringSink(unencTicket))));
-   cout << "Decrypted ticket" << endl;
    stringstream Ticket(unencTicket);
    string oName, encAesKey, enciv, enccmac;
    Ticket >> oName >> encAesKey >> enciv >> enccmac;
 
 
-   SecByteBlock cmac_key(AES::DEFAULT_KEYLENGTH);
-   SecByteBlock common_key(AES::DEFAULT_KEYLENGTH);
-   byte iv[ AES::BLOCKSIZE ];
    ArraySource((const byte *) encAesKey.c_str(), encAesKey.size(), true, new Base64Decoder(new ArraySink(common_key, sizeof(common_key))));
    ArraySource((const byte *) enciv.c_str(), enciv.size(), true, new Base64Decoder(new ArraySink(iv, sizeof(iv))));
    ArraySource((const byte *) enccmac.c_str(), enccmac.size(), true, new Base64Decoder(new ArraySink(cmac_key, sizeof(cmac_key))));
@@ -233,9 +223,9 @@ void incomingRequestHandler(CBC_Mode< AES >::Decryption dAES)
    commonE.SetKeyWithIV(common_key, common_key.size(), iv);
    commonD.SetKeyWithIV(common_key, common_key.size(), iv);
 
+   symRead(commonD, commonCmac, &connectedSock, (char *) tempBuf, sizeof(tempBuf));
    otherName = (char *) tempBuf;
    symWrite(commonE, commonCmac, &connectedSock, ownName.c_str(), ownName.length());
-   symRead(commonD, commonCmac, &connectedSock, (char *) tempBuf, sizeof(tempBuf));
    delete [] tempBuf;
 
    printf("\r%s\r", std::string(charsRead, ' ').c_str());

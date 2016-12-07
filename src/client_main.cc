@@ -54,6 +54,7 @@ void SignalHandler( int signum )
 int main( int argc, char ** argv )
 {
    signal(SIGINT, SignalHandler);
+   setbuf(stdout, NULL);
 
    try
    {
@@ -72,7 +73,6 @@ int main( int argc, char ** argv )
           int locAddrLen = sizeof(locAddr);
           incSock.GetSockName((sockaddr *) &locAddr, (socklen_t *) &locAddrLen);
           int locPort = ntohs(locAddr.sin_port);
-          cout << "Bound to port: " << locPort << endl;
 
 	  sockServer.Create();
 	  sockServer.Connect("localhost", port);
@@ -89,6 +89,7 @@ int main( int argc, char ** argv )
 	  }
 
 	  uname = sendBuf;	// Store username
+          ownName = uname;
 
 	  cout << "Enter your password: ";
 	  if ( !getline(cin, sendBuf) )
@@ -136,8 +137,6 @@ int main( int argc, char ** argv )
 		       new HexEncoder(new StringSink(encoded)) // HexEncoder
 		                );// StringSource
 
-	  cout << "Encoded hash of digest: " << encoded << endl;
-	  cout << "Sending Hash Stuff" << endl;
 
 	  // Convert username, digest, and nonce to string and send
 	  ss << uname << "~" << encoded << "~" << nonce;
@@ -154,10 +153,6 @@ int main( int argc, char ** argv )
 	  string aes_str = recoverMsg(sockServer);
 	  string iv_str = recoverMsg(sockServer);
 	  string cmac_str = recoverMsg(sockServer);
-
-	  cout << "AES Key(includes control chars): " << aes_str << endl;
-	  cout << "IV(includes control chars): " << iv_str << endl;
-	  cout << "CMAC Key(includes control chars): " << cmac_str << endl;
 
 	  SecByteBlock cmac_key(AES::DEFAULT_KEYLENGTH);
 	  SecByteBlock server_key(AES::DEFAULT_KEYLENGTH);
@@ -206,7 +201,6 @@ int main( int argc, char ** argv )
 
           connReqHdlr(e, d, cmac, &sockServer);
           startTalking(commonE, commonD, commonCmac, &connectedSock);
-	  sockServer.ShutDown(SHUT_RDWR);
    }
    catch ( Exception& e )
    {
@@ -222,10 +216,12 @@ int main( int argc, char ** argv )
 	  sockServer.ShutDown(SHUT_RDWR);
 	  return -1;
    }
+   catch (...)
+   {
+   }
 }
 
 void ParseNonceSalt( Integer& nonce, Integer& salt, stringstream& ss )
 {
    ss >> nonce >> salt;
-   cout << "Nonce: " << nonce << endl << "Salt: " << salt << endl;
 }

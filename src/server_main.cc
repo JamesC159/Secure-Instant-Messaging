@@ -107,7 +107,6 @@ int main( int argc, char ** argv )
 		 throw(new Exception(Exception::IO_ERROR, "Failed to read buddies.txt"));
 	  }
 
-	  cout << "Reading content of buddy file" << endl;
 	  InitBuddies(buddyfile);
 
 	  // Read in the buddies from the buddies file.
@@ -117,7 +116,6 @@ int main( int argc, char ** argv )
 		 throw(new Exception(Exception::IO_ERROR, "Failed to read buddies.txt"));
 	  }
 
-	  cout << "Reading content of buddy file" << endl;
 	  InitBuddyBuddy(buddybuddy);
 
 	  // Read client authentication database
@@ -127,7 +125,6 @@ int main( int argc, char ** argv )
 		 throw(new Exception(Exception::IO_ERROR, "Failed to read db.txt"));
 	  }
 
-	  cout << "Reading content of client database" << endl;
 	  clientdb.InitClients(dbfile);
 
 	  // Start client listen-accept phase.
@@ -276,18 +273,15 @@ void * clientWorker( void * in )
    size_t bytes = symRead(d, cmac, &(tdata->sockSource), readBuff,
 	        sizeof(readBuff));
 
-   cout << "Bytes read: " << bytes << endl;
 
    int cliPort = (int) std::stol(readBuff);
    if ( cliPort > 0 )
    {
-          cout << "Got port from " << client->username << ": " << cliPort << endl;
           sockaddr_in cAddr;
           socklen_t c_len = sizeof(cAddr);
           tdata->sockSource.GetPeerName((sockaddr *) &cAddr, &c_len);
           client->port = Integer(cliPort);
           client->ip = inet_ntoa(cAddr.sin_addr);
-          cout << "Ip is: " << client->ip << endl;
    }
    else
    {
@@ -313,10 +307,16 @@ void * clientWorker( void * in )
 
    // Read request to talk to another client.
    memset(readBuff, 0, sizeof(readBuff));
-   bytes = bytes = symRead(d, cmac, &(tdata->sockSource), readBuff,
+   bytes = symRead(d, cmac, &(tdata->sockSource), readBuff,
 	        sizeof(readBuff));
 
    // Search for the requested client in their BuddyList
+   if (string("FIN") == readBuff)
+   {
+      delete tdata;
+      return NULL;
+   }
+      
    bool found = false;
    it = buddy2buddy.find(tdata->clientName);
    for ( string buddy : it->second )
@@ -359,7 +359,6 @@ void * clientWorker( void * in )
 		 encoded.clear();
 		 StringSource(sharedAES.data(), sharedAES.size(), true,
 			      new Base64Encoder(new StringSink(encoded))); // StringSource
-		 cout << "Encoded AES key: " << encoded << endl;
 		 ssb << encoded << " ";
 		 ss << encoded << " ";
 
@@ -368,7 +367,6 @@ void * clientWorker( void * in )
 		 StringSource(sharedIV, sizeof(sharedIV), true,
 			      new Base64Encoder(new StringSink(encoded))); // StringSource
 
-		 cout << "Encoded iv: " << encoded << endl;
 		 ssb << encoded << " ";
 		 ss << encoded << " ";
 
@@ -378,7 +376,6 @@ void * clientWorker( void * in )
 			      new Base64Encoder(new StringSink(encoded))); // StringSource
 
 		 string ticket = "";
-		 cout << "Encoded cmac key: " << encoded << endl;
 		 ssb << encoded;
 		 ss << encoded << " ";
                  ticket = ssb.str();
@@ -390,14 +387,11 @@ void * clientWorker( void * in )
 		 	        new StreamTransformationFilter(enc, new Base64Encoder(new StringSink(cipher))) // StreamTransformationFilter
 		 	                 );// StringSource
 
-		 cout << "Ticket to b: " << escape(cipher.c_str()) << endl;
                  ss << cipher;
                  string sink = ss.str();
-		 cout << "connect response: " << escape(sink.c_str()) << "END" << endl;
 
 		 // Send Connect reply to A
 		 symWrite(e, cmac, &(tdata->sockSource), sink.c_str(), sink.length());
-		 cout << "Sent connect response" << endl;
 
 		 found = true;
 	  }
@@ -411,9 +405,9 @@ void * clientWorker( void * in )
    }
 
 //   bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
-   tdata->sockSource.ShutDown(SHUT_RDWR);
    cout << "Exiting handler thread" << endl;
 
+   delete tdata;
    return NULL;
 }
 
@@ -465,8 +459,6 @@ bool authenticate( struct ThreadData * tdata )
 	  sendBuf = ss.str();
 	  ss.str("");
 	  ss.clear();
-	  cout << "Sending Nonce and Salt to Client: " << nonce << " " << salt
-		       << endl;
 
 	  SendMsg(sendBuf, tdata);
 
@@ -526,7 +518,6 @@ void InitBuddies( ifstream& file )
 	  string user, port;
 
 	  ss >> user >> port;
-	  cout << "Username: " << user << " Port: " << port << endl;
 	  Integer portno = Integer(port.c_str());
 	  buddylist.AddBuddy(user, portno);
    }
@@ -548,7 +539,6 @@ void InitBuddyBuddy( ifstream& file )
    {
 	  stringstream ss(line);
 	  ss >> user;
-	  cout << "Username: " << user << endl;
 	  while ( ss >> buddy )
 	  {
 		 buddies.push_back(buddy);
