@@ -15,6 +15,29 @@ Socket sockSource;
 BuddyList buddylist;
 ClientDB clientdb;
 
+char* escape(const char* buffer){
+    int i,j;
+    int l = strlen(buffer) + 1;
+    char esc_char[]= { '\a','\b','\f','\n','\r','\t','\v','\\'};
+    char essc_str[]= {  'a', 'b', 'f', 'n', 'r', 't', 'v','\\'};
+    char* dest  =  (char*)calloc( l*2,sizeof(char));
+    char* ptr=dest;
+    for(i=0;i<l;i++){
+        for(j=0; j< 8 ;j++){
+            if( buffer[i]==esc_char[j] ){
+              *ptr++ = '\\';
+              *ptr++ = essc_str[j];
+              break;
+            }
+        }
+        if(j == 8 )
+            *ptr++ = buffer[i];
+    }
+  *ptr='\0';
+  return dest;
+}
+
+
 void InitClientDB( ifstream& );
 void InitBuddyBuddy( ifstream& );
 void InitBuddies( ifstream& );
@@ -126,6 +149,7 @@ int main( int argc, char ** argv )
 		 rc = pthread_create(&clientThread, NULL, clientWorker, (void *) tdata);
 		 if ( rc )
 		 {
+			cout << "rc had non-zero value" << endl;
 			throw(new Exception(Exception::OTHER_ERROR,
 			         "Failed creating client thread"));
 		 }
@@ -316,14 +340,15 @@ void * clientWorker( void * in )
 		}
 
 		// Generate shared key between clients
+   		 AutoSeededRandomPool prng2;
 		 SecByteBlock sharedCMAC(AES::DEFAULT_KEYLENGTH);
-		 prng.GenerateBlock(cmacKey, cmacKey.size());
+		 prng2.GenerateBlock(sharedCMAC, sharedCMAC.size());
 
 		 SecByteBlock sharedAES(AES::DEFAULT_KEYLENGTH);
-		 prng.GenerateBlock(aesKey, aesKey.size());
+		 prng2.GenerateBlock(sharedAES, sharedAES.size());
 
 		 byte sharedIV[ AES::BLOCKSIZE ];
-		 prng.GenerateBlock(iv, sizeof(iv));
+		 prng2.GenerateBlock(sharedIV, sizeof(sharedIV));
 
 		 string mac, encoded;
 
@@ -334,7 +359,7 @@ void * clientWorker( void * in )
 		 encoded.clear();
 		 StringSource(sharedAES.data(), sharedAES.size(), true,
 			      new Base64Encoder(new StringSink(encoded))); // StringSource
-
+		 cout << "Encoded AES key: " << encoded << endl;
 		 ssb << encoded << " ";
 		 ss << encoded << " ";
 
@@ -343,6 +368,7 @@ void * clientWorker( void * in )
 		 StringSource(sharedIV, sizeof(sharedIV), true,
 			      new Base64Encoder(new StringSink(encoded))); // StringSource
 
+		 cout << "Encoded iv: " << encoded << endl;
 		 ssb << encoded << " ";
 		 ss << encoded << " ";
 
@@ -352,6 +378,7 @@ void * clientWorker( void * in )
 			      new Base64Encoder(new StringSink(encoded))); // StringSource
 
 		 string ticket = "";
+		 cout << "Encoded cmac key: " << encoded << endl;
 		 ssb << encoded;
 		 ss << encoded << " ";
                  ticket = ssb.str();
@@ -363,11 +390,14 @@ void * clientWorker( void * in )
 		 	        new StreamTransformationFilter(enc, new Base64Encoder(new StringSink(cipher))) // StreamTransformationFilter
 		 	                 );// StringSource
 
+		 cout << "Ticket to b: " << escape(cipher.c_str()) << endl;
                  ss << cipher;
                  string sink = ss.str();
+		 cout << "connect response: " << escape(sink.c_str()) << "END" << endl;
 
 		 // Send Connect reply to A
 		 symWrite(e, cmac, &(tdata->sockSource), sink.c_str(), sink.length());
+		 cout << "Sent connect response" << endl;
 
 		 found = true;
 	  }
@@ -382,8 +412,9 @@ void * clientWorker( void * in )
 
 //   bytes = symWrite(e, cmac, &(tdata->sockSource), send.c_str(), send.length());
    tdata->sockSource.ShutDown(SHUT_RDWR);
+   cout << "Exiting handler thread" << endl;
 
-   return (void*) 0;
+   return NULL;
 }
 
 /******************************************************************************

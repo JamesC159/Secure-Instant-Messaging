@@ -205,7 +205,7 @@ int main( int argc, char ** argv )
 	  }
 
           connReqHdlr(e, d, cmac, &sockServer);
-          startTalking(e, d, cmac, &connectedSock);
+          startTalking(commonE, commonD, commonCmac, &connectedSock);
 	  sockServer.ShutDown(SHUT_RDWR);
    }
    catch ( Exception& e )
